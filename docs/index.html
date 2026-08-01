@@ -226,9 +226,19 @@
     .day-tab .tab-new   { font-size: 0.65rem; font-weight: 600; color: #d97706; margin-top: 1px; }
 
     /* Multi-theatre time row */
-    .card-times-multi { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; align-items: flex-start; }
+    .card-times-multi {
+      display: flex; gap: 10px; align-items: flex-start; width: 100%;
+      flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+    }
+    .card-times-multi::-webkit-scrollbar { display: none; }
+    .card-times-multi > .card-time { flex-shrink: 0; }
     .time-theater { font-size: 0.78em; font-weight: 400; color: var(--text-muted); }
-    .card-badges-multi { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start; }
+    .card-badges-multi {
+      display: flex; gap: 6px; align-items: flex-start; width: 100%;
+      flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+    }
+    .card-badges-multi::-webkit-scrollbar { display: none; }
+    .card-badges-multi > .theater-badge { flex-shrink: 0; }
 
     /* ── Main ─────────────────────────────────────────────────────── */
     .main { max-width: 645px; margin: 0 auto; padding: 24px 24px 80px; }
@@ -307,15 +317,20 @@
     /* ── Header row ──── */
     .card-top { display: flex; align-items: flex-start; gap: 16px; }
 
-    /* Time + badge on the same row */
+    /* Theater link(s) stacked above the showtimes list */
     .card-time-row {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 12px; margin-bottom: 6px;
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: 8px; margin-bottom: 6px;
     }
+    .card-time-row > .theater-badge,
+    .card-time-row > .card-badges-multi { order: -1; }
     .card-time {
       font-size: 0.96rem; font-weight: 700; color: var(--text-muted);
       letter-spacing: 0; line-height: 1; flex-shrink: 0;
+      max-width: 100%; overflow-x: auto; overflow-y: hidden;
+      white-space: nowrap; scrollbar-width: none;
     }
+    .card-time::-webkit-scrollbar { display: none; }
 
     .card-title-area { flex: 1; min-width: 0; }
     .card-title {
@@ -593,29 +608,6 @@
 
       /* No prev/next arrows on the date picker — swipe/scroll instead */
       .day-nav-btn { display: none; }
-
-      /* Theater link(s) move below the showtimes list instead of sitting beside it */
-      .card-time-row {
-        flex-direction: column; align-items: stretch; gap: 8px;
-      }
-
-      /* Showtimes become a horizontally scrollable list instead of wrapping */
-      .card-time {
-        overflow-x: auto; white-space: nowrap; scrollbar-width: none;
-      }
-      .card-time::-webkit-scrollbar { display: none; }
-      .card-times-multi {
-        flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-      }
-      .card-times-multi::-webkit-scrollbar { display: none; }
-      .card-times-multi > .card-time { flex-shrink: 0; }
-
-      /* Theater link(s) become a horizontally scrollable list when there are several */
-      .card-badges-multi {
-        flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-      }
-      .card-badges-multi::-webkit-scrollbar { display: none; }
-      .card-badges-multi > .theater-badge { flex-shrink: 0; }
     }
   </style>
 </head>
