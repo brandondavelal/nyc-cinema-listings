@@ -586,6 +586,36 @@
       .card-img  { width: calc(100% + 32px); margin-left: -16px; margin-right: -16px; }
       .card-time { font-size: 1.08rem; min-width: 80px; }
       .card-title { font-size: 1.05rem; }
+
+      /* No calendar view on mobile — center the remaining All Movies/Likes toggle */
+      #week-btn { display: none; }
+      .filters-top { justify-content: center; }
+
+      /* No prev/next arrows on the date picker — swipe/scroll instead */
+      .day-nav-btn { display: none; }
+
+      /* Theater link(s) move below the showtimes list instead of sitting beside it */
+      .card-time-row {
+        flex-direction: column; align-items: stretch; gap: 8px;
+      }
+
+      /* Showtimes become a horizontally scrollable list instead of wrapping */
+      .card-time {
+        overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+      }
+      .card-time::-webkit-scrollbar { display: none; }
+      .card-times-multi {
+        flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+      }
+      .card-times-multi::-webkit-scrollbar { display: none; }
+      .card-times-multi > .card-time { flex-shrink: 0; }
+
+      /* Theater link(s) become a horizontally scrollable list when there are several */
+      .card-badges-multi {
+        flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+      }
+      .card-badges-multi::-webkit-scrollbar { display: none; }
+      .card-badges-multi > .theater-badge { flex-shrink: 0; }
     }
   </style>
 </head>
