@@ -87,18 +87,10 @@
     .large-toggle.active .toggle-track { background: var(--text); border-color: var(--text); }
     .large-toggle.active .toggle-thumb { left: 21px; background: #fff; }
 
-    /* Labeled toggle (All Movies / Likes) — flanking labels, active side highlighted */
     .filters-top {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 12px; border-bottom: 1px solid var(--border); background: var(--surface);
     }
-    .labeled-toggle .toggle-label-off, .labeled-toggle .toggle-label-on {
-      transition: color 0.12s, font-weight 0.12s;
-    }
-    .labeled-toggle .toggle-label-off { color: var(--text); }
-    .labeled-toggle .toggle-label-on  { color: var(--text-muted); }
-    .labeled-toggle.active .toggle-label-off { color: var(--text-muted); }
-    .labeled-toggle.active .toggle-label-on  { color: var(--text); }
 
     /* Floating refresh — fixed bottom-right */
     .refresh-float {
@@ -320,7 +312,7 @@
     /* Theater link(s) stacked above the showtimes list */
     .card-time-row {
       display: flex; flex-direction: column; align-items: flex-start;
-      gap: 8px; margin-bottom: 6px;
+      gap: 8px; margin-top: 8px;
     }
     .card-time-row > .theater-badge,
     .card-time-row > .card-badges-multi { order: -1; }
@@ -331,6 +323,7 @@
       white-space: nowrap; scrollbar-width: none;
     }
     .card-time::-webkit-scrollbar { display: none; }
+    .time-value { font-weight: 700; }
 
     .card-title-area { flex: 1; min-width: 0; }
     .card-title {
@@ -351,13 +344,13 @@
     /* Also-playing pill carousel + nav */
     .pills-wrap {
       position: relative;        /* contains the absolute buttons */
-      width: fit-content; max-width: 100%;
+      width: 100%;
       margin-top: 10px;
     }
     .card-pills-carousel {
       display: flex; gap: 6px;
       overflow-x: auto; scrollbar-width: none; padding-bottom: 1px;
-      max-width: 400px;
+      width: 100%;
     }
     .card-pills-carousel::-webkit-scrollbar { display: none; }
     /* Buttons overlay the carousel — icon sits in the solid-white end of the gradient */
@@ -473,7 +466,7 @@
       color: var(--text-secondary); line-height: 1.6;
     }
 
-    /* Theater badge — solid color block */
+    /* Theater badge — plain text, colored to match its filter chip */
     .theater-badge {
       display: inline-flex; align-items: center;
       font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
@@ -482,7 +475,25 @@
       text-decoration: none;
       transition: color 0.12s;
     }
-    a.theater-badge:hover { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+    .theater-badge.metrograph    { color: var(--metrograph); }
+    .theater-badge.nitehawk-w    { color: var(--nitehawk-w); }
+    .theater-badge.ifc           { color: var(--ifc); }
+    .theater-badge.roxy          { color: var(--roxy); }
+    .theater-badge.lowcinema     { color: var(--lowcinema); }
+    .theater-badge.quad          { color: var(--quad); }
+    .theater-badge.syndicated    { color: var(--syndicated); }
+    .theater-badge.paris         { color: var(--paris); }
+    .theater-badge.filmforum     { color: var(--filmforum); }
+    .theater-badge.anthology     { color: var(--anthology); }
+    .theater-badge.japansociety  { color: var(--japansociety); }
+    .theater-badge.momi          { color: var(--momi); }
+    .theater-badge.bam           { color: var(--bam); }
+    .theater-badge.spectacle     { color: var(--spectacle); }
+    .theater-badge.lalliance     { color: var(--lalliance); }
+    .theater-badge.angelika      { color: var(--angelika); }
+    .theater-badge.villageeast   { color: var(--villageeast); }
+    .theater-badge.cinema123     { color: var(--cinema123); }
+    a.theater-badge:hover { text-decoration: underline; text-underline-offset: 2px; }
     .time-link { color: inherit; text-decoration: none; }
     .card-time.time-link { color: var(--text-muted); }
     .time-link:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -578,10 +589,9 @@
 
 <div class="sticky-nav">
   <div class="filters-top">
-    <div class="large-toggle labeled-toggle" id="liked-toggle" onclick="toggleLikedOnly()">
-      <span class="toggle-label-off">All Movies</span>
+    <div class="large-toggle" id="liked-toggle" onclick="toggleLikedOnly()">
+      <span>Likes</span>
       <div class="toggle-track"><div class="toggle-thumb"></div></div>
-      <span class="toggle-label-on">Likes</span>
     </div>
     <div class="large-toggle" id="week-btn" onclick="toggleWeekView()">
       <span>Calendar view</span>
@@ -1346,7 +1356,7 @@ function buildIndieCard(g) {
         const isNew = g.newTimes && g.newTimes.has(sess.theaterKey + '|' + sess.time);
         const href = sess.ticketUrl || sess.filmUrl;
         const newTag = isNew ? ' <span class="card-new-label">(New)</span>' : '';
-        const inner = esc(sess.time) + newTag + ' <span class="time-theater">(' + esc(THEATER_SHORT[sess.theaterKey] || sess.theater) + ')</span>';
+        const inner = '<span class="time-value">' + esc(sess.time) + '</span>' + newTag + ' <span class="time-theater">(' + esc(THEATER_SHORT[sess.theaterKey] || sess.theater) + ')</span>';
         return href
           ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="card-time time-link">' + inner + '</a>'
           : '<span class="card-time">' + inner + '</span>';
@@ -1371,8 +1381,8 @@ function buildIndieCard(g) {
       const href = sess.ticketUrl || t.filmUrl;
       const newTag = isNew ? ' <span class="card-new-label">(New)</span>' : '';
       return (href
-        ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="time-link">' + esc(sess.time) + '</a>'
-        : '<span>' + esc(sess.time) + '</span>') + newTag;
+        ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="time-link time-value">' + esc(sess.time) + '</a>'
+        : '<span class="time-value">' + esc(sess.time) + '</span>') + newTag;
     }).join('  ·  ');
     const label = esc(THEATER_SHORT[t.theaterKey] || t.theater);
     const badgeHtml = t.filmUrl
@@ -1396,10 +1406,10 @@ function buildIndieCard(g) {
   card.innerHTML =
     '<div class="card-content">' +
       '<div class="card-top"><div class="card-title-area">' +
-        '<div class="card-time-row">' + timeRowHtml + '</div>' +
         '<div class="card-title-row"><div class="card-title">' + esc(g.title) + '</div>' + chevronHtml + '</div>' +
         (metaHtml  ? '<div class="card-meta">'           + metaHtml  + '</div>' : '') +
         (meta2Html ? '<div class="card-meta-secondary">' + meta2Html + '</div>' : '') +
+        '<div class="card-time-row">' + timeRowHtml + '</div>' +
       '</div></div>' +
       '<div class="card-image-slot"></div>' +
       '<div class="card-body">' + bodyContent + pillsHtml + '</div>' +
