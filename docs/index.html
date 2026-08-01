@@ -124,6 +124,13 @@
       box-shadow: -2px 0 12px rgba(0,0,0,0.15);
     }
     .mobile-panel.open { transform: translateX(0); }
+    /* Theater panel slides in from the left instead of the right */
+    #mobile-theater-panel {
+      right: auto; left: 0;
+      transform: translateX(-100%);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+    }
+    #mobile-theater-panel.open { transform: translateX(0); }
     .mobile-panel-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
@@ -143,6 +150,8 @@
     }
     .mobile-panel-row:active { background: #f7f7f7; }
     .mobile-panel-row.selected { background: #f5f5f5; }
+    /* Theater rows already show state via the checkbox — skip the fill */
+    #mobile-theater-list .mobile-panel-row.selected { background: none; }
     .mobile-panel-row .mobile-row-check {
       flex-shrink: 0; width: 18px; height: 18px; border: 1.5px solid var(--border);
       display: flex; align-items: center; justify-content: center; color: transparent;
