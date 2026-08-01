@@ -325,8 +325,8 @@
     .card-time-row > .theater-badge,
     .card-time-row > .card-badges-multi { order: -1; }
     .card-time {
-      font-size: 0.96rem; font-weight: 700; color: var(--text-muted);
-      letter-spacing: 0; line-height: 1; flex-shrink: 0;
+      font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
+      letter-spacing: 0; line-height: 1.45; flex-shrink: 0;
       max-width: 100%; overflow-x: auto; overflow-y: hidden;
       white-space: nowrap; scrollbar-width: none;
     }
@@ -476,49 +476,13 @@
     /* Theater badge — solid color block */
     .theater-badge {
       display: inline-flex; align-items: center;
-      padding: 3px 8px;
-      font-size: 0.64rem; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 0.1em;
-      background: transparent; border: 1.5px solid currentColor;
+      font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
+      line-height: 1.45;
+      background: transparent; border: none;
       text-decoration: none;
-      transition: background 0.12s, color 0.12s;
+      transition: color 0.12s;
     }
-    .theater-badge.metrograph   { color: var(--metrograph); }
-    .theater-badge.nitehawk-w   { color: var(--nitehawk-w); }
-    .theater-badge.ifc          { color: var(--ifc); }
-    .theater-badge.roxy         { color: var(--roxy); }
-    .theater-badge.lowcinema    { color: var(--lowcinema); }
-    .theater-badge.quad         { color: var(--quad); }
-    .theater-badge.syndicated   { color: var(--syndicated); }
-    .theater-badge.paris        { color: var(--paris); }
-    .theater-badge.filmforum    { color: var(--filmforum); }
-    .theater-badge.anthology    { color: var(--anthology); }
-    .theater-badge.japansociety    { color: var(--japansociety); }
-    .theater-badge.momi    { color: var(--momi); }
-    .theater-badge.bam    { color: var(--bam); }
-    .theater-badge.spectacle    { color: var(--spectacle); }
-    .theater-badge.lalliance    { color: var(--lalliance); }
-    .theater-badge.angelika    { color: var(--angelika); }
-    .theater-badge.villageeast    { color: var(--villageeast); }
-    .theater-badge.cinema123    { color: var(--cinema123); }
-    a.theater-badge.metrograph:hover   { background: var(--metrograph);  color: #fff; }
-    a.theater-badge.nitehawk-w:hover   { background: var(--nitehawk-w);  color: #fff; }
-    a.theater-badge.ifc:hover          { background: var(--ifc);         color: #fff; }
-    a.theater-badge.roxy:hover         { background: var(--roxy);        color: #fff; }
-    a.theater-badge.lowcinema:hover    { background: var(--lowcinema);   color: #fff; }
-    a.theater-badge.quad:hover         { background: var(--quad);        color: #fff; }
-    a.theater-badge.syndicated:hover   { background: var(--syndicated);  color: #fff; }
-    a.theater-badge.paris:hover        { background: var(--paris);       color: #fff; }
-    a.theater-badge.filmforum:hover    { background: var(--filmforum);   color: #fff; }
-    a.theater-badge.anthology:hover    { background: var(--anthology);   color: #fff; }
-    a.theater-badge.japansociety:hover    { background: var(--japansociety); color: #fff; }
-    a.theater-badge.momi:hover    { background: var(--momi); color: #fff; }
-    a.theater-badge.bam:hover    { background: var(--bam); color: #fff; }
-    a.theater-badge.spectacle:hover    { background: var(--spectacle); color: #fff; }
-    a.theater-badge.lalliance:hover    { background: var(--lalliance); color: #fff; }
-    a.theater-badge.angelika:hover    { background: var(--angelika); color: #fff; }
-    a.theater-badge.villageeast:hover    { background: var(--villageeast); color: #fff; }
-    a.theater-badge.cinema123:hover    { background: var(--cinema123); color: #fff; }
+    a.theater-badge:hover { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
     .time-link { color: inherit; text-decoration: none; }
     .card-time.time-link { color: var(--text-muted); }
     .time-link:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -599,8 +563,7 @@
     @media (max-width: 560px) {
       .card-content { padding: 16px 16px; }
       .card-img  { width: calc(100% + 32px); margin-left: -16px; margin-right: -16px; }
-      .card-time { font-size: 1.08rem; min-width: 80px; }
-      .card-title { font-size: 1.05rem; }
+      .card-time { min-width: 80px; }
 
       /* No calendar view on mobile — center the remaining All Movies/Likes toggle */
       #week-btn { display: none; }
@@ -1437,10 +1400,9 @@ function buildIndieCard(g) {
         '<div class="card-title-row"><div class="card-title">' + esc(g.title) + '</div>' + chevronHtml + '</div>' +
         (metaHtml  ? '<div class="card-meta">'           + metaHtml  + '</div>' : '') +
         (meta2Html ? '<div class="card-meta-secondary">' + meta2Html + '</div>' : '') +
-        pillsHtml +
       '</div></div>' +
       '<div class="card-image-slot"></div>' +
-      '<div class="card-body">' + bodyContent + '</div>' +
+      '<div class="card-body">' + bodyContent + pillsHtml + '</div>' +
     '</div>';
 
   if (isXed) {
