@@ -726,6 +726,11 @@
 </div>
 
 <script>
+// Prevent the browser from restoring a stale scroll position on load/refresh —
+// the page's height changes drastically once data arrives, which otherwise
+// leaves the sticky nav overlapping the first card.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
 const DOW   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const THEATER_SHORT = { metrograph: 'Metrograph', bam: 'BAM', ifc: 'IFC Center', filmforum: 'Film Forum', paris: 'Paris Theater', momi: 'MoMI', japansociety: 'Japan Society', angelika: 'Angelika', villageeast: 'Village East', cinema123: 'Cinema 123', 'nitehawk-w': 'Nitehawk Wmsbg', roxy: 'Roxy', lowcinema: 'Low Cinema', quad: 'Quad', syndicated: 'Syndicated', anthology: 'Anthology', spectacle: 'Spectacle', lalliance: "L'Alliance" };
@@ -1087,6 +1092,7 @@ function render() {
   syncFilterChipsUI();
   if (!activeDay || !data.days.includes(activeDay)) activeDay = data.days[0] || null;
   renderTabs();
+  window.scrollTo({ top: 0, behavior: 'instant' });
   setDay(activeDay, false);
   requestAnimationFrame(preloadImages);
 }
