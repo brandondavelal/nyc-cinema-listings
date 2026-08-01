@@ -95,24 +95,6 @@
     .cinema-title { font-size: 1rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
     #liked-toggle { display: none; }
 
-    /* Floating refresh — fixed bottom-right */
-    .refresh-float {
-      position: fixed; bottom: 28px; right: 28px; z-index: 500;
-      display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
-    }
-    .last-updated { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; text-align: right; }
-    .btn-refresh {
-      display: flex; align-items: center; gap: 5px;
-      background: var(--text); border: none;
-      color: #fff; padding: 8px 16px;
-      cursor: pointer; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.01em;
-      transition: opacity 0.15s;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-    }
-    .btn-refresh:hover:not(:disabled) { opacity: 0.8; }
-    .btn-refresh:disabled { opacity: 0.35; cursor: default; }
-    .refresh-icon { transition: transform 0.6s; }
-    .btn-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Mobile theater/date filter bar + panels (mobile only, see @media below) ── */
@@ -704,17 +686,6 @@
   <div class="mobile-panel-body" id="mobile-date-list"></div>
 </div>
 
-<!-- Floating refresh button -->
-<div class="refresh-float" id="refresh-float" style="display:none">
-  <span class="last-updated" id="last-updated"></span>
-  <button class="btn-refresh" id="refresh-btn" onclick="doRefresh()">
-    <svg class="refresh-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-    </svg>
-    Refresh
-  </button>
-</div>
-
 <div class="toast-container" id="toast-container"></div>
 
 <div class="main">
@@ -1049,8 +1020,6 @@ function toggleX(title, btn) {
 // Data is published once a day by a script running on a separate machine and
 // committed as a static file — there's no live backend to poll or refresh.
 async function load(endpoint = './data.json?t=' + Date.now(), spinner = false) {
-  const btn = document.getElementById('refresh-btn');
-  btn.disabled = true; btn.classList.add('spinning');
   if (spinner) showLoading();
   try {
     const res = await fetch(endpoint);
@@ -1066,20 +1035,11 @@ async function load(endpoint = './data.json?t=' + Date.now(), spinner = false) {
     } else {
       renderCards(); // restore previous content
     }
-  } finally {
-    btn.disabled = false; btn.classList.remove('spinning');
   }
 }
-function doRefresh() { load(); }
 
 /* ── Render ──────────────────────────────────────────────────────── */
 function render() {
-  if (data.lastUpdated) {
-    const d = new Date(data.lastUpdated);
-    document.getElementById('last-updated').textContent =
-      'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
   clearToasts();
   if (data.errors) {
     Object.entries(data.errors).forEach(([theater, msg]) => {
@@ -1088,7 +1048,6 @@ function render() {
   }
 
   document.querySelector('.sticky-nav').classList.add('visible');
-  document.getElementById('refresh-float').style.display = '';
   syncFilterChipsUI();
   if (!activeDay || !data.days.includes(activeDay)) activeDay = data.days[0] || null;
   renderTabs();
