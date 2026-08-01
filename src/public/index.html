@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinema NY</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #ffffff;
+      --surface:      #ffffff;
+      --card:         #ffffff;
+      --card-hover:   #faf9f8;
+      --border:       rgba(0,0,0,0.1);
+      --border-hover: rgba(0,0,0,0.22);
+      --text:         #0a0a0a;
+      --text-secondary: #2c2c2c;
+      --text-muted:   #666;
+      --text-dim:     #aaa;
+      --metrograph:   #c01c1c;
+      --nitehawk-w:   #0e5fa3;
+      --ifc:          #0e7a32;
+      --roxy:         #b85a00;
+      --lowcinema:    #6200c9;
+      --quad:         #b8166f;
+      --syndicated:   #2f9e44;
+      --paris:        #1864ab;
+      --filmforum:    #c27803;
+      --anthology:    #862e9c;
+      --japansociety: #d6336c;
+      --momi:         #0c8599;
+      --bam:          #1971c2;
+      --spectacle:    #e8590c;
+      --lalliance:    #099268;
+      --angelika:     #4263eb;
+      --villageeast:  #a61e4d;
+      --cinema123:    #5c940d;
+      --ticket-green: #2f9e44;
+      --ticket-orange: #d97706;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Sticky nav wrapper (filters + day tabs) ─────────────────── */
+    .sticky-nav {
+      position: sticky; top: 0; z-index: 200;
+      background: var(--surface);
+      visibility: hidden;
+    }
+    .sticky-nav.visible {
+      visibility: visible;
+    }
+
+        .large-toggle {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none;
+      /* Stretch to chip row height via parent align-items: stretch */
+      padding: 0 0; border: 1.5px solid transparent;
+      font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+      transition: color 0.12s;
+    }
+    .large-toggle:hover { color: var(--text); }
+    .large-toggle.active { color: var(--text); }
+    .toggle-track {
+      position: relative; flex-shrink: 0;
+      width: 38px;
+      /* Fill the full height of the toggle wrapper = same as chip button */
+      align-self: stretch;
+      background: transparent; border: 1.5px solid currentColor;
+      transition: background 0.15s;
+    }
+    .toggle-thumb {
+      position: absolute;
+      /* Centered vertically, 2px from sides */
+      top: 50%; transform: translateY(-50%);
+      left: 3px;
+      width: 12px; height: 12px; background: currentColor;
+      transition: left 0.15s;
+    }
+    .large-toggle.active .toggle-track { background: var(--text); border-color: var(--text); }
+    .large-toggle.active .toggle-thumb { left: 21px; background: #fff; }
+
+    /* Labeled toggle (All Movies / Likes) — flanking labels, active side highlighted */
+    .filters-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px; border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .labeled-toggle .toggle-label-off, .labeled-toggle .toggle-label-on {
+      transition: color 0.12s, font-weight 0.12s;
+    }
+    .labeled-toggle .toggle-label-off { color: var(--text); }
+    .labeled-toggle .toggle-label-on  { color: var(--text-muted); }
+    .labeled-toggle.active .toggle-label-off { color: var(--text-muted); }
+    .labeled-toggle.active .toggle-label-on  { color: var(--text); }
+
+    /* Floating refresh — fixed bottom-right */
+    .refresh-float {
+      position: fixed; bottom: 28px; right: 28px; z-index: 500;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+    }
+    .last-updated { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; text-align: right; }
+    .btn-refresh {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--text); border: none;
+      color: #fff; padding: 8px 16px;
+      cursor: pointer; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.01em;
+      transition: opacity 0.15s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    }
+    .btn-refresh:hover:not(:disabled) { opacity: 0.8; }
+    .btn-refresh:disabled { opacity: 0.35; cursor: default; }
+    .refresh-icon { transition: transform 0.6s; }
+    .btn-refresh.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Theater filter chips ─────────────────────────────────────── */
+    .theater-row {
+      padding: 10px 12px; display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .theater-row .theater-chip[data-t="all"] { flex-shrink: 0; }
+    .theater-row-divider { flex-shrink: 0; width: 1px; align-self: stretch; background: var(--border); }
+    .theater-carousel-wrap { position: relative; flex: 1; min-width: 0; }
+    .theater-carousel {
+      display: flex; align-items: center; gap: 7px;
+      overflow-x: auto; scrollbar-width: none; padding-bottom: 1px;
+    }
+    .theater-carousel::-webkit-scrollbar { display: none; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 13px; 
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--text-muted);
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    /* "All Theaters" active = solid black */
+    .chip:hover                { border-color: var(--text); color: var(--text); }
+    .chip.active[data-t="all"] { background: var(--text); color: #fff; border-color: var(--text); }
+    .chip[data-t="all"]:hover  { background: var(--text); color: #fff; border-color: var(--text); }
+
+    /* Theater chips — outlined in theater color by default and when active */
+    .chip[data-t="metrograph"]          { color: var(--metrograph);  border-color: var(--metrograph); }
+    .chip[data-t="nitehawk-w"]          { color: var(--nitehawk-w);  border-color: var(--nitehawk-w); }
+    .chip[data-t="ifc"]                 { color: var(--ifc);         border-color: var(--ifc); }
+    .chip[data-t="roxy"]                { color: var(--roxy);        border-color: var(--roxy); }
+    .chip[data-t="lowcinema"]           { color: var(--lowcinema);   border-color: var(--lowcinema); }
+    .chip[data-t="quad"]                { color: var(--quad);        border-color: var(--quad); }
+    .chip[data-t="syndicated"]          { color: var(--syndicated);  border-color: var(--syndicated); }
+    .chip[data-t="paris"]               { color: var(--paris);       border-color: var(--paris); }
+    .chip[data-t="filmforum"]           { color: var(--filmforum);   border-color: var(--filmforum); }
+    .chip[data-t="anthology"]           { color: var(--anthology);   border-color: var(--anthology); }
+    .chip[data-t="japansociety"]           { color: var(--japansociety); border-color: var(--japansociety); }
+    .chip[data-t="momi"]           { color: var(--momi); border-color: var(--momi); }
+    .chip[data-t="bam"]           { color: var(--bam); border-color: var(--bam); }
+    .chip[data-t="spectacle"]           { color: var(--spectacle); border-color: var(--spectacle); }
+    .chip[data-t="lalliance"]           { color: var(--lalliance); border-color: var(--lalliance); }
+    .chip[data-t="angelika"]            { color: var(--angelika); border-color: var(--angelika); }
+    .chip[data-t="villageeast"]         { color: var(--villageeast); border-color: var(--villageeast); }
+    .chip[data-t="cinema123"]           { color: var(--cinema123); border-color: var(--cinema123); }
+    .chip.active[data-t="metrograph"]   { background: var(--metrograph);  color: #fff; border-color: var(--metrograph); }
+    .chip.active[data-t="nitehawk-w"]   { background: var(--nitehawk-w);  color: #fff; border-color: var(--nitehawk-w); }
+    .chip.active[data-t="ifc"]          { background: var(--ifc);         color: #fff; border-color: var(--ifc); }
+    .chip.active[data-t="roxy"]         { background: var(--roxy);        color: #fff; border-color: var(--roxy); }
+    .chip.active[data-t="lowcinema"]    { background: var(--lowcinema);   color: #fff; border-color: var(--lowcinema); }
+    .chip.active[data-t="quad"]         { background: var(--quad);        color: #fff; border-color: var(--quad); }
+    .chip.active[data-t="syndicated"]   { background: var(--syndicated);  color: #fff; border-color: var(--syndicated); }
+    .chip.active[data-t="paris"]        { background: var(--paris);       color: #fff; border-color: var(--paris); }
+    .chip.active[data-t="filmforum"]    { background: var(--filmforum);   color: #fff; border-color: var(--filmforum); }
+    .chip.active[data-t="anthology"]    { background: var(--anthology);   color: #fff; border-color: var(--anthology); }
+    .chip.active[data-t="japansociety"]    { background: var(--japansociety); color: #fff; border-color: var(--japansociety); }
+    .chip.active[data-t="momi"]    { background: var(--momi); color: #fff; border-color: var(--momi); }
+    .chip.active[data-t="bam"]    { background: var(--bam); color: #fff; border-color: var(--bam); }
+    .chip.active[data-t="spectacle"]    { background: var(--spectacle); color: #fff; border-color: var(--spectacle); }
+    .chip.active[data-t="lalliance"]    { background: var(--lalliance); color: #fff; border-color: var(--lalliance); }
+    .chip.active[data-t="angelika"]     { background: var(--angelika); color: #fff; border-color: var(--angelika); }
+    .chip.active[data-t="villageeast"]  { background: var(--villageeast); color: #fff; border-color: var(--villageeast); }
+    .chip.active[data-t="cinema123"]    { background: var(--cinema123); color: #fff; border-color: var(--cinema123); }
+    /* Hover (unselected theater chips) = same outlined look as unchecked, plus an underline */
+    .chip.theater-chip[data-t]:not([data-t="all"]):not(.active):hover {
+      background: transparent;
+      text-decoration: underline;
+    }
+
+
+    /* ── Day tabs + nav ───────────────────────────────────────────── */
+    .day-tabs-outer {
+      display: flex; align-items: stretch; height: auto;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .day-nav-btn {
+      flex-shrink: 0; background: none; border: none;
+      border-right: 1px solid var(--border);
+      color: var(--text-muted); width: 42px;
+      cursor: pointer; font-size: 1.1rem; font-weight: 400;
+      transition: color 0.12s, background 0.12s;
+    }
+    .day-nav-btn:last-child { border-right: none; border-left: 1px solid var(--border); }
+    .day-nav-btn:hover { color: var(--text); background: #fff; box-shadow: inset 0 0 0 1.5px var(--text); }
+    .day-tabs-wrap {
+      flex: 1; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
+    }
+    .day-tabs-wrap::-webkit-scrollbar { display: none; }
+    .day-tabs { display: flex; min-width: max-content; }
+    .day-tab {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 12px 20px 10px; background: transparent; border: none;
+      border-bottom: 3px solid transparent; color: var(--text-dim);
+      cursor: pointer; transition: color 0.12s, border-color 0.12s; gap: 1px;
+      width: 88px; flex-shrink: 0; height: auto; overflow: visible;
+    }
+    .day-tab:hover { color: var(--text); }
+    .day-tab.active { color: var(--text); border-bottom-color: var(--text); }
+    .day-tab .tab-dow   { font-size: 0.7rem;  font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .day-tab .tab-num   { font-size: 1.7rem;  font-weight: 800; line-height: 1; letter-spacing: -0.04em; }
+    .day-tab .tab-mon   { font-size: 0.68rem; font-weight: 600; color: inherit; opacity: 0.6; }
+    .day-tab.active .tab-mon { opacity: 0.8; }
+    .day-tab .tab-count { font-size: 0.65rem; font-weight: 500; color: var(--text-dim); margin-top: 2px; white-space: nowrap; }
+    .day-tab .tab-new   { font-size: 0.65rem; font-weight: 600; color: #d97706; margin-top: 1px; }
+
+    /* Multi-theatre time row */
+    .card-times-multi { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; align-items: flex-start; }
+    .time-theater { font-size: 0.78em; font-weight: 400; color: var(--text-muted); }
+    .card-badges-multi { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start; }
+
+    /* ── Main ─────────────────────────────────────────────────────── */
+    .main { max-width: 645px; margin: 0 auto; padding: 24px 24px 80px; }
+    .main.week-mode  { max-width: none; padding: 0; }
+
+    /* ── Week view ────────────────────────────────────────────────── */
+    .week-groups { display: flex; flex-direction: column; gap: 1px; background: rgba(0,0,0,0.1); }
+    .week-group  { display: flex; flex-direction: column; }
+    .week-header-row {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; background: rgba(0,0,0,0.1); background-clip: content-box;
+      position: sticky; top: var(--nav-h, 65px); z-index: 10;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .week-header {
+      background: var(--surface); padding: 7px 8px 5px;
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .week-header-dow {
+      display: none;
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-dim);
+    }
+    .week-header-row.is-stuck .week-header-dow { display: block; }
+    .week-header-num {
+      font-size: 1.2rem; font-weight: 800; letter-spacing: -0.04em;
+      color: var(--text-dim); line-height: 1;
+    }
+    .week-header--today .week-header-num { color: var(--text); }
+    .week-content-row {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; background: rgba(0,0,0,0.1);
+    }
+    .week-cell {
+      background: var(--bg); padding: 10px 8px; min-height: 72px;
+    }
+    .week-cell--empty { background: var(--bg); min-height: 72px; }
+    .week-cell--today { background: #fafafa; }
+    .week-film {
+      display: flex; gap: 6px; align-items: flex-start;
+      margin-bottom: 9px;
+    }
+    .week-film:last-child { margin-bottom: 0; }
+    .week-film-body { flex: 1; min-width: 0; }
+    .week-film-title {
+      font-size: 0.76rem; font-weight: 700; color: var(--text);
+      line-height: 1.3; margin-bottom: 4px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    a.week-film-title { color: inherit; text-decoration: none; }
+    a.week-film-title:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .week-film-times { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
+    .week-time { font-size: 0.62rem; font-weight: 600; color: var(--text-muted); }
+    .week-theater { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; align-self: center; }
+    .week-no-films { font-size: 0.65rem; color: var(--text-dim); }
+
+    .error-notice {
+      display: flex; gap: 8px; align-items: flex-start;
+      background: #fff0f0; border: 1.5px solid #ffb3b3;
+       padding: 12px 16px;
+      font-size: 0.84rem; font-weight: 500; color: #b00; margin-bottom: 16px;
+    }
+
+    /* ── Cards ────────────────────────────────────────────────────── */
+    .screenings { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+
+    .card-content { padding: 20px 22px; }
+
+    /* ── Header row ──── */
+    .card-top { display: flex; align-items: flex-start; gap: 16px; }
+
+    /* Time + badge on the same row */
+    .card-time-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; margin-bottom: 6px;
+    }
+    .card-time {
+      font-size: 0.96rem; font-weight: 700; color: var(--text-muted);
+      letter-spacing: 0; line-height: 1; flex-shrink: 0;
+    }
+
+    .card-title-area { flex: 1; min-width: 0; }
+    .card-title {
+      font-size: 2.3rem; font-weight: 800; color: var(--text);
+      line-height: 1.05; letter-spacing: -0.04em; margin-top: 9px; margin-bottom: 6px;
+    }
+    .card-meta {
+      font-size: 0.9rem; font-weight: 500; color: var(--text-secondary);
+      margin-top: 5px; line-height: 1.5;
+    }
+    .card-meta .sep { margin: 0 6px; color: var(--text-dim); }
+    .card-meta-secondary {
+      font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
+      margin-top: 3px; line-height: 1.45;
+    }
+    .card-meta-secondary .sep { margin: 0 6px; color: var(--text-dim); }
+
+    /* Also-playing pill carousel + nav */
+    .pills-wrap {
+      position: relative;        /* contains the absolute buttons */
+      width: fit-content; max-width: 100%;
+      margin-top: 10px;
+    }
+    .card-pills-carousel {
+      display: flex; gap: 6px;
+      overflow-x: auto; scrollbar-width: none; padding-bottom: 1px;
+      max-width: 400px;
+    }
+    .card-pills-carousel::-webkit-scrollbar { display: none; }
+    /* Buttons overlay the carousel — icon sits in the solid-white end of the gradient */
+    .pills-nav {
+      position: absolute; top: 0; bottom: 0;
+      display: flex; align-items: center;
+      z-index: 2;
+      background: none; border: none; padding: 0;
+      color: var(--text-muted);
+      width: 56px; cursor: pointer; font-size: 1.05rem;
+      transition: color 0.12s;
+    }
+    .pills-nav:first-child {
+      left: 0; justify-content: flex-start; padding-left: 4px;
+      background: linear-gradient(to left, transparent, #fff 50%);
+    }
+    .pills-nav:last-child {
+      right: 0; justify-content: flex-end; padding-right: 4px;
+      background: linear-gradient(to right, transparent, #fff 50%);
+    }
+    .pills-nav:hover { color: var(--text); }
+    .pills-nav[hidden] { visibility: hidden; pointer-events: none; display: flex !important; }
+    .also-pill {
+      flex-shrink: 0; padding: 3px 10px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      font-size: 0.68rem; font-weight: 600; color: var(--text-muted);
+      white-space: nowrap; line-height: 1.5; letter-spacing: 0.01em;
+      pointer-events: none; /* static — not interactive */
+    }
+
+
+    /* ── Body ─────────────────────────────────────────────────────── */
+    .card-body { margin-top: 18px; }
+
+    .img-wrap { position: relative; }
+    .card-actions {
+      position: absolute; top: 8px; right: 8px; z-index: 2;
+      display: flex; gap: 6px;
+    }
+    .heart-btn, .ticket-btn, .x-btn {
+      width: 42px; height: 42px; border: none;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text); padding: 0;
+      transition: color 0.12s, background 0.12s, border-color 0.12s;
+    }
+    .heart-btn:hover, .ticket-btn:hover, .x-btn:hover { color: var(--text); }
+    .heart-btn svg, .ticket-btn svg, .x-btn svg { fill: none; transition: fill 0.12s; }
+    .heart-btn.liked { background: var(--text); color: #fff; }
+    .heart-btn.liked svg { fill: currentColor; }
+    .ticket-btn.ticketed-here { background: var(--ticket-green); color: #fff; border: 2px solid var(--ticket-green); }
+    .ticket-btn.ticketed-here svg { fill: currentColor; }
+    .ticket-btn.ticketed-elsewhere { background: var(--ticket-orange); color: #fff; border: 2px solid var(--ticket-orange); }
+    .ticket-btn.ticketed-elsewhere svg { fill: currentColor; }
+
+    .card.liked-card { outline: 2px solid var(--text); }
+    .card.ticketed-card-here { outline: 2px solid var(--ticket-green); }
+    .card.ticketed-card-elsewhere { outline: 2px solid var(--ticket-orange); }
+    .card.x-marked { opacity: 0.5; }
+
+    .card-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .x-chevron {
+      background: none; border: none; cursor: pointer; padding: 4px; margin-top: 9px;
+      color: var(--text-dim); flex-shrink: 0; display: flex; align-items: center;
+    }
+    .x-chevron:hover { color: var(--text); }
+    .x-chevron svg { transition: transform 0.2s; }
+    .card.x-collapsed .x-chevron svg { transform: rotate(-90deg); }
+    .card.x-collapsed .card-time-row,
+    .card.x-collapsed .card-meta,
+    .card.x-collapsed .card-meta-secondary,
+    .card.x-collapsed .section-label,
+    .card.x-collapsed .pills-wrap,
+    .card.x-collapsed .card-image-slot,
+    .card.x-collapsed .card-body {
+      display: none;
+    }
+    .card.x-collapsed .card-content { padding-bottom: 14px; }
+
+    .card-img {
+      display: block;
+      width: calc(100% + 44px); margin: 0 -22px 16px;
+      aspect-ratio: 16 / 9; object-fit: cover; object-position: center;
+    }
+    .card-img--letterbox { background: #0a0a0a; object-fit: contain; }
+
+    .card-desc {
+      font-size: 0.92rem; font-weight: 400;
+      color: var(--text-secondary); line-height: 1.7;
+    }
+    .card-desc-text {
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-desc-text.expanded {
+      display: block; -webkit-line-clamp: unset; overflow: visible;
+    }
+    .card-desc-toggle {
+      display: inline-block; margin-top: 4px;
+      background: none; border: none; padding: 0;
+      font: inherit; font-size: 0.88rem; font-weight: 600;
+      color: var(--text); text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .card-quote {
+      border-left: 3px solid var(--text);
+      padding: 4px 0 4px 14px;
+      margin: 14px 0 4px;
+      font-style: italic;
+      font-size: 0.9rem; font-weight: 400;
+      color: var(--text-secondary); line-height: 1.6;
+    }
+
+    /* Theater badge — solid color block */
+    .theater-badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 8px;
+      font-size: 0.64rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      background: transparent; border: 1.5px solid currentColor;
+      text-decoration: none;
+      transition: background 0.12s, color 0.12s;
+    }
+    .theater-badge.metrograph   { color: var(--metrograph); }
+    .theater-badge.nitehawk-w   { color: var(--nitehawk-w); }
+    .theater-badge.ifc          { color: var(--ifc); }
+    .theater-badge.roxy         { color: var(--roxy); }
+    .theater-badge.lowcinema    { color: var(--lowcinema); }
+    .theater-badge.quad         { color: var(--quad); }
+    .theater-badge.syndicated   { color: var(--syndicated); }
+    .theater-badge.paris        { color: var(--paris); }
+    .theater-badge.filmforum    { color: var(--filmforum); }
+    .theater-badge.anthology    { color: var(--anthology); }
+    .theater-badge.japansociety    { color: var(--japansociety); }
+    .theater-badge.momi    { color: var(--momi); }
+    .theater-badge.bam    { color: var(--bam); }
+    .theater-badge.spectacle    { color: var(--spectacle); }
+    .theater-badge.lalliance    { color: var(--lalliance); }
+    .theater-badge.angelika    { color: var(--angelika); }
+    .theater-badge.villageeast    { color: var(--villageeast); }
+    .theater-badge.cinema123    { color: var(--cinema123); }
+    a.theater-badge.metrograph:hover   { background: var(--metrograph);  color: #fff; }
+    a.theater-badge.nitehawk-w:hover   { background: var(--nitehawk-w);  color: #fff; }
+    a.theater-badge.ifc:hover          { background: var(--ifc);         color: #fff; }
+    a.theater-badge.roxy:hover         { background: var(--roxy);        color: #fff; }
+    a.theater-badge.lowcinema:hover    { background: var(--lowcinema);   color: #fff; }
+    a.theater-badge.quad:hover         { background: var(--quad);        color: #fff; }
+    a.theater-badge.syndicated:hover   { background: var(--syndicated);  color: #fff; }
+    a.theater-badge.paris:hover        { background: var(--paris);       color: #fff; }
+    a.theater-badge.filmforum:hover    { background: var(--filmforum);   color: #fff; }
+    a.theater-badge.anthology:hover    { background: var(--anthology);   color: #fff; }
+    a.theater-badge.japansociety:hover    { background: var(--japansociety); color: #fff; }
+    a.theater-badge.momi:hover    { background: var(--momi); color: #fff; }
+    a.theater-badge.bam:hover    { background: var(--bam); color: #fff; }
+    a.theater-badge.spectacle:hover    { background: var(--spectacle); color: #fff; }
+    a.theater-badge.lalliance:hover    { background: var(--lalliance); color: #fff; }
+    a.theater-badge.angelika:hover    { background: var(--angelika); color: #fff; }
+    a.theater-badge.villageeast:hover    { background: var(--villageeast); color: #fff; }
+    a.theater-badge.cinema123:hover    { background: var(--cinema123); color: #fff; }
+    .time-link { color: inherit; text-decoration: none; }
+    .card-time.time-link { color: var(--text-muted); }
+    .time-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .card-new-label {
+      font-size: 0.7rem; font-weight: 700; color: #d97706;
+      letter-spacing: 0; vertical-align: middle;
+    }
+
+    .section-label {
+      font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px;
+    }
+    .only-today-label {
+      font-size: 0.7rem; font-weight: 700; color: #d97706;
+      letter-spacing: 0; vertical-align: middle;
+    }
+    a.also-pill { text-decoration: none; cursor: pointer; pointer-events: auto; }
+    a.also-pill:hover { border-color: var(--border); color: var(--text-muted); }
+
+    /* ── Empty / loading ──────────────────────────────────────────── */
+    /* ── Toast notifications ─────────────────────────────────────── */
+    .toast-container {
+      position: fixed; bottom: 24px; left: 24px; z-index: 600;
+      display: flex; flex-direction: column; gap: 8px; max-width: 380px;
+    }
+    .toast {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: #1a1a1a; color: #fff;
+      padding: 10px 10px 10px 14px;
+      font-size: 0.78rem; font-weight: 500; line-height: 1.5;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.22);
+      animation: toast-in 0.18s ease;
+    }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(6px); } }
+    .toast-msg { flex: 1; }
+    .toast-close {
+      flex-shrink: 0; background: none; border: none;
+      color: rgba(255,255,255,0.45); cursor: pointer; font-size: 1.1rem;
+      line-height: 1; padding: 0 2px; transition: color 0.12s;
+    }
+    .toast-close:hover { color: #fff; }
+
+    /* ── Empty state ──────────────────────────────────────────────── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 18px; padding: 80px 20px;
+    }
+    .empty-text {
+      font-size: 0.9rem; font-weight: 500; color: var(--text-muted);
+      text-align: center; line-height: 1.6; max-width: 300px;
+    }
+    .empty-reset {
+      display: flex; align-items: center;
+      background: var(--text); border: none; color: #fff;
+      padding: 8px 20px; cursor: pointer;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.01em;
+      transition: opacity 0.15s;
+    }
+    .empty-reset:hover { opacity: 0.75; }
+
+    .no-screenings {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-muted); font-size: 1rem; font-weight: 500;
+    }
+
+    #loading-overlay {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 16px;
+      min-height: calc(100vh - 160px);
+    }
+    .loader-ring {
+      width: 32px; height: 32px;
+      border: 2.5px solid rgba(0,0,0,0.08); border-top-color: var(--text-dim);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 560px) {
+      .card-content { padding: 16px 16px; }
+      .card-img  { width: calc(100% + 32px); margin-left: -16px; margin-right: -16px; }
+      .card-time { font-size: 1.08rem; min-width: 80px; }
+      .card-title { font-size: 1.05rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sticky-nav">
+  <div class="filters-top">
+    <div class="large-toggle labeled-toggle" id="liked-toggle" onclick="toggleLikedOnly()">
+      <span class="toggle-label-off">All Movies</span>
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span class="toggle-label-on">Likes</span>
+    </div>
+    <div class="large-toggle" id="week-btn" onclick="toggleWeekView()">
+      <span>Calendar view</span>
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+    </div>
+  </div>
+  <div class="theater-row">
+    <button class="chip theater-chip active" data-t="all" onclick="toggleTheaterFilter('all')">All Theaters</button>
+    <div class="theater-row-divider"></div>
+    <div class="theater-carousel-wrap">
+      <button class="pills-nav" onclick="scrollTheaterCarousel(-1)">‹</button>
+      <div class="theater-carousel" id="theater-carousel">
+        <button class="chip theater-chip"        data-t="metrograph"    onclick="toggleTheaterFilter('metrograph')">Metrograph</button>
+        <button class="chip theater-chip"        data-t="bam"           onclick="toggleTheaterFilter('bam')">BAM</button>
+        <button class="chip theater-chip"        data-t="ifc"           onclick="toggleTheaterFilter('ifc')">IFC</button>
+        <button class="chip theater-chip"        data-t="filmforum"     onclick="toggleTheaterFilter('filmforum')">Film Forum</button>
+        <button class="chip theater-chip"        data-t="paris"         onclick="toggleTheaterFilter('paris')">Paris</button>
+        <button class="chip theater-chip"        data-t="momi"          onclick="toggleTheaterFilter('momi')">MoMI</button>
+        <button class="chip theater-chip"        data-t="japansociety"  onclick="toggleTheaterFilter('japansociety')">Japan Society</button>
+        <button class="chip theater-chip"        data-t="nitehawk-w"    onclick="toggleTheaterFilter('nitehawk-w')">Nitehawk WBG</button>
+        <button class="chip theater-chip"        data-t="roxy"          onclick="toggleTheaterFilter('roxy')">Roxy</button>
+        <button class="chip theater-chip"        data-t="lowcinema"     onclick="toggleTheaterFilter('lowcinema')">Low</button>
+        <button class="chip theater-chip"        data-t="quad"          onclick="toggleTheaterFilter('quad')">Quad</button>
+        <button class="chip theater-chip"        data-t="syndicated"    onclick="toggleTheaterFilter('syndicated')">Syndicated</button>
+        <button class="chip theater-chip"        data-t="anthology"     onclick="toggleTheaterFilter('anthology')">Anthology</button>
+        <button class="chip theater-chip"        data-t="spectacle"     onclick="toggleTheaterFilter('spectacle')">Spectacle</button>
+        <button class="chip theater-chip"        data-t="lalliance"     onclick="toggleTheaterFilter('lalliance')">L'Alliance</button>
+        <button class="chip theater-chip"        data-t="angelika"      onclick="toggleTheaterFilter('angelika')">Angelika</button>
+        <button class="chip theater-chip"        data-t="villageeast"   onclick="toggleTheaterFilter('villageeast')">Village East</button>
+        <button class="chip theater-chip"        data-t="cinema123"     onclick="toggleTheaterFilter('cinema123')">Cinema 123</button>
+      </div>
+      <button class="pills-nav" onclick="scrollTheaterCarousel(1)">›</button>
+    </div>
+  </div>
+
+<div class="day-tabs-outer">
+  <button class="day-nav-btn" onclick="scrollDays(-1)">‹</button>
+  <div class="day-tabs-wrap">
+    <div class="day-tabs" id="day-tabs"></div>
+  </div>
+  <button class="day-nav-btn" onclick="scrollDays(1)">›</button>
+</div>
+</div><!-- /sticky-nav -->
+
+<!-- Floating refresh button -->
+<div class="refresh-float" id="refresh-float" style="display:none">
+  <span class="last-updated" id="last-updated"></span>
+  <button class="btn-refresh" id="refresh-btn" onclick="doRefresh()">
+    <svg class="refresh-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+    </svg>
+    Refresh
+  </button>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<div class="main">
+  <div id="content">
+    <div id="loading-overlay">
+      <div class="loader-ring"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DOW   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const THEATER_SHORT = { metrograph: 'Metrograph', 'nitehawk-w': 'Nitehawk Wmsbg', ifc: 'IFC Center', roxy: 'Roxy', lowcinema: 'Low Cinema', quad: 'Quad', syndicated: 'Syndicated', paris: 'Paris Theater', filmforum: 'Film Forum', anthology: 'Anthology', japansociety: 'Japan Society', momi: 'MoMI', bam: 'BAM', spectacle: 'Spectacle', lalliance: "L'Alliance", angelika: 'Angelika', villageeast: 'Village East', cinema123: 'Cinema 123' };
+const ALL_THEATER_KEYS = Object.keys(THEATER_SHORT);
+
+function loadSelectedTheaters() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('selected-theaters') || 'null');
+    if (Array.isArray(saved) && saved.length) {
+      const valid = saved.filter(k => ALL_THEATER_KEYS.includes(k));
+      if (valid.length) return new Set(valid);
+    }
+  } catch (e) {}
+  return new Set(ALL_THEATER_KEYS);
+}
+function saveSelectedTheaters() { localStorage.setItem('selected-theaters', JSON.stringify([...selectedTheaters])); }
+let selectedTheaters = loadSelectedTheaters();
+
+function shortTime(t) {
+  const m = (t || '').match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
+  if (!m) return t || '';
+  const h = m[1], min = m[2], p = m[3].toLowerCase();
+  return min === '00' ? `${h}${p}` : `${h}:${min}${p}`;
+}
+
+function scrollDays(dir) {
+  const wrap = document.querySelector('.day-tabs-wrap');
+  if (wrap) wrap.scrollBy({ left: dir * 220, behavior: 'smooth' });
+}
+
+function scrollPills(btn, dir) {
+  const carousel = btn.parentElement.querySelector('.card-pills-carousel');
+  if (!carousel) return;
+  carousel.scrollBy({ left: dir * 180, behavior: 'smooth' });
+  setTimeout(() => updatePillsNav(carousel), 320);
+}
+
+function updatePillsNav(carousel) {
+  const wrap = carousel.closest('.pills-wrap');
+  if (!wrap) return;
+  const btns = wrap.querySelectorAll('.pills-nav');
+  const atStart = carousel.scrollLeft <= 1;
+  const atEnd   = carousel.scrollLeft >= carousel.scrollWidth - carousel.clientWidth - 1;
+  if (btns[0]) btns[0].hidden = atStart;
+  if (btns[1]) btns[1].hidden = atEnd;
+}
+
+function pillLabel(other, current) {
+  const p = other.date.split('-').map(Number);
+  const dt = new Date(p[0], p[1] - 1, p[2]);
+  const dateStr = DOW[dt.getDay()] + ' ' + MONTH[p[1] - 1] + ' ' + p[2];
+  const timeStr = shortTime(other.time);
+  // Include theatre name when it differs from the current card's theatre
+  const theaterStr = (other.theaterKey !== current.theaterKey)
+    ? (THEATER_SHORT[other.theaterKey] || other.theater)
+    : null;
+  const parts = [dateStr];
+  if (theaterStr) parts.push(theaterStr);
+  parts.push(timeStr);
+  return parts.join(' · ');
+}
+
+let data = null;
+let activeDay    = null;
+let weekView     = false;
+let showLikedOnly = false;
+
+function toISODate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function toggleWeekView() {
+  weekView = !weekView;
+  document.getElementById('week-btn').classList.toggle('active', weekView);
+  document.querySelector('.main').classList.toggle('week-mode', weekView);
+  document.querySelector('.day-tabs-outer').style.display = weekView ? 'none' : '';
+  if (!weekView && window._weekScrollHandler) {
+    window.removeEventListener('scroll', window._weekScrollHandler);
+    window._weekScrollHandler = null;
+  }
+  renderCards();
+}
+
+function groupScreeningsForWeek(screenings) {
+  const map = new Map();
+  screenings.forEach(s => {
+    const k = normTitle(s.title);
+    if (!map.has(k)) map.set(k, {
+      title: s.title, filmUrl: s.filmUrl,
+      director: s.director || null, runtime: s.runtime || null,
+      sessions: [], minSort: Infinity,
+    });
+    const g = map.get(k);
+    if (s.title.length > g.title.length) g.title = s.title;
+    if (!g.filmUrl && s.filmUrl) g.filmUrl = s.filmUrl;
+    if (!g.director && s.director) g.director = s.director;
+    if (!g.runtime && s.runtime) g.runtime = s.runtime;
+    if (!g.sessions.some(x => x.theaterKey === s.theaterKey && x.time === s.time)) {
+      g.sessions.push({ time: s.time, sortTime: s.sortTime, ticketUrl: s.ticketUrl, theaterKey: s.theaterKey, filmUrl: s.filmUrl });
+      g.sessions.sort((a, b) => a.sortTime - b.sortTime);
+    }
+    if (s.sortTime < g.minSort) g.minSort = s.sortTime;
+  });
+  return Array.from(map.values())
+    .sort((a, b) => a.minSort - b.minSort);
+}
+
+function buildWeekFilmEntry(g) {
+  // Group sessions by theatre so multiple times at the same theatre render as "T1 T2 Theatre"
+  const byTheatre = new Map();
+  g.sessions.forEach(sess => {
+    if (!byTheatre.has(sess.theaterKey)) byTheatre.set(sess.theaterKey, []);
+    byTheatre.get(sess.theaterKey).push(sess);
+  });
+  const dot = '<span style="color:var(--text-dim);font-size:0.5rem;align-self:center"> · </span>';
+  const timesHtml = '<div class="week-film-times">' +
+    Array.from(byTheatre.entries()).map(([tk, sessions]) => {
+      const timeSpans = sessions.map(sess => {
+        const href = sess.ticketUrl || sess.filmUrl || g.filmUrl;
+        return href
+          ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="week-time time-link">' + esc(sess.time) + '</a>'
+          : '<span class="week-time">' + esc(sess.time) + '</span>';
+      }).join(' ');
+      const label = ' <span class="week-theater" style="color:var(--' + esc(tk) + ')">' + esc(THEATER_SHORT[tk] || tk) + '</span>';
+      return timeSpans + label;
+    }).join(dot) +
+  '</div>';
+  const titleHtml = g.filmUrl
+    ? '<a href="' + esc(g.filmUrl) + '" target="_blank" rel="noopener" class="week-film-title">' + esc(g.title) + '</a>'
+    : '<div class="week-film-title">' + esc(g.title) + '</div>';
+  return '<div class="week-film">' +
+    '<div class="week-film-body">' + titleHtml + timesHtml + '</div>' +
+  '</div>';
+}
+
+function renderWeekView() {
+  const nav = document.querySelector('.sticky-nav');
+  if (nav) document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+
+  const content = document.getElementById('content');
+  const daySet  = new Set(data.days);
+
+  const allScreenings = (data.screenings || []).filter(s =>
+    selectedTheaters.has(s.theaterKey) && (!showLikedOnly || likedFilms.has(normTitle(s.title)))
+  );
+  const byDate = new Map();
+  allScreenings.forEach(s => {
+    if (!byDate.has(s.date)) byDate.set(s.date, []);
+    byDate.get(s.date).push(s);
+  });
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = toISODate(today);
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+
+  const lastDate = new Date(data.days[data.days.length - 1] + 'T00:00:00');
+  const totalDays = Math.floor((lastDate - monday) / 86400000) + 1;
+  const totalWeeks = Math.ceil(totalDays / 7);
+
+  const DOWS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html = '<div class="week-groups">';
+
+  for (let w = 0; w < totalWeeks; w++) {
+    // Per-week sticky header row: DOW label + date number
+    html += '<div class="week-group"><div class="week-header-row">';
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + w * 7 + d);
+      const isToday = toISODate(date) === todayStr;
+      html += '<div class="week-header' + (isToday ? ' week-header--today' : '') + '">' +
+        '<span class="week-header-dow">' + DOWS[d] + '</span>' +
+        '<span class="week-header-num">' + date.getDate() + '</span>' +
+      '</div>';
+    }
+    html += '</div><div class="week-content-row">';
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + w * 7 + d);
+      const dateStr = toISODate(date);
+
+      if (!daySet.has(dateStr)) {
+        html += '<div class="week-cell week-cell--empty"></div>';
+        continue;
+      }
+      const isToday = dateStr === todayStr;
+      const groups  = groupScreeningsForWeek(byDate.get(dateStr) || []);
+
+      html += '<div class="week-cell' + (isToday ? ' week-cell--today' : '') + '">';
+      if (groups.length === 0) {
+        html += '<div class="week-no-films">—</div>';
+      } else {
+        groups.forEach(g => { html += buildWeekFilmEntry(g); });
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+
+  if (window._weekScrollHandler) window.removeEventListener('scroll', window._weekScrollHandler);
+  window._weekScrollHandler = function() {
+    const navH = (document.querySelector('.sticky-nav')?.offsetHeight || 65) + 1;
+    const rows = document.querySelectorAll('.week-header-row');
+    if (!rows.length) return;
+    let active = rows[0];
+    rows.forEach(row => { if (row.getBoundingClientRect().top <= navH) active = row; });
+    rows.forEach(row => row.classList.toggle('is-stuck', row === active));
+  };
+  window.addEventListener('scroll', window._weekScrollHandler, { passive: true });
+  window._weekScrollHandler();
+}
+
+function showLoading() {
+  document.getElementById('content').innerHTML =
+    '<div id="loading-overlay"><div class="loader-ring"></div></div>';
+}
+
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML =
+    '<span class="toast-msg">' + esc(msg) + '</span>' +
+    '<button class="toast-close" onclick="this.closest(\'.toast\').remove()">×</button>';
+  container.appendChild(toast);
+}
+
+function clearToasts() {
+  document.getElementById('toast-container').innerHTML = '';
+}
+
+function resetFilters() {
+  selectedTheaters = new Set(ALL_THEATER_KEYS);
+  showLikedOnly = false;
+  saveSelectedTheaters();
+  syncFilterChipsUI();
+  document.getElementById('liked-toggle').classList.remove('active');
+  renderTabs();
+  renderCards();
+}
+const likedFilms = new Set(JSON.parse(localStorage.getItem('liked-films') || '[]').map(normTitle));
+const xFilms     = new Set(JSON.parse(localStorage.getItem('x-films') || '[]').map(normTitle));
+// Tracks which X'd cards the user has manually expanded; resets on reload (collapsed is the default for X'd cards).
+const expandedXFilms = new Set();
+
+// Ticketed films are tracked per-date: normTitle -> Set of dates the user has tickets for.
+const ticketedRawStored = JSON.parse(localStorage.getItem('ticketed-films') || '{}');
+const ticketedFilms = new Map(
+  Array.isArray(ticketedRawStored) ? [] : Object.entries(ticketedRawStored).map(([k, v]) => [k, new Set(v)])
+);
+
+function saveLiked()    { localStorage.setItem('liked-films', JSON.stringify([...likedFilms])); }
+function saveX()        { localStorage.setItem('x-films', JSON.stringify([...xFilms])); }
+function saveTicketed() {
+  const obj = {};
+  ticketedFilms.forEach((dates, key) => { obj[key] = [...dates]; });
+  localStorage.setItem('ticketed-films', JSON.stringify(obj));
+}
+
+// Sort priority for the screenings list: films ticketed *for this date* go first,
+// then liked, then everything else in its normal time order, with X'd-out films
+// pushed to the very bottom. A film ticketed for a different date keeps its normal spot.
+function cardSortRank(title, date) {
+  const key = normTitle(title);
+  if (xFilms.has(key)) return 3;
+  const dates = ticketedFilms.get(key);
+  if (dates && dates.has(date)) return 0;
+  if (likedFilms.has(key)) return 1;
+  return 2;
+}
+
+function toggleHeart(title, btn) {
+  if (likedFilms.has(title)) likedFilms.delete(title);
+  else likedFilms.add(title);
+  saveLiked();
+  renderCards();
+}
+
+function toggleTicket(title, date, btn) {
+  const dates = ticketedFilms.get(title);
+  if (dates && dates.has(date)) {
+    dates.delete(date);
+    if (dates.size === 0) ticketedFilms.delete(title);
+  } else {
+    if (dates) dates.add(date);
+    else ticketedFilms.set(title, new Set([date]));
+    // Getting tickets overrides/undoes the like state.
+    if (likedFilms.has(title)) { likedFilms.delete(title); saveLiked(); }
+  }
+  saveTicketed();
+  renderCards();
+}
+
+function toggleX(title, btn) {
+  if (xFilms.has(title)) {
+    xFilms.delete(title);
+    expandedXFilms.delete(title);
+  } else {
+    xFilms.add(title);
+    // X'ing a listing clears its ticketed/liked states.
+    likedFilms.delete(title);
+    ticketedFilms.delete(title);
+    saveLiked();
+    saveTicketed();
+  }
+  saveX();
+  renderCards();
+}
+
+/* ── API ─────────────────────────────────────────────────────────── */
+async function load(endpoint = '/api/screenings', spinner = false) {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true; btn.classList.add('spinning');
+  if (spinner) showLoading();
+  try {
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+    render();
+  } catch (e) {
+    showToast('Could not connect to the server.');
+    // Keep existing content visible if we already have data; only show error state on first load
+    if (!data) {
+      document.getElementById('content').innerHTML =
+        '<div class="empty-state"><p class="empty-text">Could not connect to the server.</p></div>';
+    } else {
+      renderCards(); // restore previous content
+    }
+  } finally {
+    btn.disabled = false; btn.classList.remove('spinning');
+  }
+}
+function doRefresh() { load('/api/refresh'); }
+
+function screeningsSignature(list) {
+  return list.map(s => s.date + '|' + s.time + '|' + s.title + '|' + s.theaterKey).sort().join(',');
+}
+
+let pollIv = null;
+function pollForMoreScreenings() {
+  if (pollIv) { clearInterval(pollIv); pollIv = null; }
+  // The backend may be showing a cached (possibly stale) session while it refreshes
+  // in the background. Poll until lastUpdated actually changes — a scrape across
+  // every theater can take well over a minute, so don't give up on a stale count.
+  const startedUpdated = data?.lastUpdated ?? null;
+  let attempts = 0;
+  const MAX_ATTEMPTS = 45; // ~6 minutes at 8s/poll — safety net in case a scrape stalls
+  pollIv = setInterval(async () => {
+    attempts++;
+    try {
+      const res = await fetch('/api/screenings');
+      if (!res.ok) return;
+      const fresh = await res.json();
+      if (fresh.lastUpdated !== startedUpdated) {
+        const sigBefore = screeningsSignature((data.screenings || []).filter(s => s.date === activeDay));
+        const sigAfter  = screeningsSignature((fresh.screenings  || []).filter(s => s.date === activeDay));
+        data = fresh;
+        if (data.lastUpdated) {
+          const d = new Date(data.lastUpdated);
+          document.getElementById('last-updated').textContent =
+            'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        renderTabs();
+        if (weekView || sigBefore !== sigAfter) renderCards();
+        clearInterval(pollIv);
+        pollIv = null;
+        return;
+      }
+      if (attempts >= MAX_ATTEMPTS) {
+        clearInterval(pollIv);
+        pollIv = null;
+      }
+    } catch (e) {}
+  }, 8000);
+}
+
+/* ── Render ──────────────────────────────────────────────────────── */
+function render() {
+  if (data.lastUpdated) {
+    const d = new Date(data.lastUpdated);
+    document.getElementById('last-updated').textContent =
+      'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  clearToasts();
+  if (data.errors) {
+    Object.entries(data.errors).forEach(([theater, msg]) => {
+      showToast('Could not load ' + theater + ': ' + msg);
+    });
+  }
+
+  document.querySelector('.sticky-nav').classList.add('visible');
+  document.getElementById('refresh-float').style.display = '';
+  syncFilterChipsUI();
+  if (!activeDay || !data.days.includes(activeDay)) activeDay = data.days[0] || null;
+  renderTabs();
+  setDay(activeDay, false);
+  requestAnimationFrame(preloadImages);
+}
+
+function preloadImages() {
+  if (!data) return;
+  const seen = new Set();
+  (data.screenings || []).forEach(s => {
+    if (s.image && !seen.has(s.image)) {
+      seen.add(s.image);
+      new Image().src = s.image;
+    }
+  });
+}
+
+function renderTabs() {
+  const wrap = document.getElementById('day-tabs');
+  wrap.innerHTML = '';
+  (data.days || []).forEach((d, i) => {
+    const [y, m, day] = d.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, day);
+    const relevant = data.screenings.filter(s => s.date === d &&
+      selectedTheaters.has(s.theaterKey) && (!showLikedOnly || likedFilms.has(normTitle(s.title))));
+    const count = new Set(relevant.map(s => s.title + '|' + s.theaterKey)).size;
+    const newCount = new Set(relevant.filter(s => s.isNew).map(s => normTitle(s.title))).size;
+    const btn = document.createElement('button');
+    btn.className = 'day-tab' + (d === activeDay ? ' active' : '');
+    btn.dataset.day = d;
+    btn.onclick = () => setDay(d);
+    btn.innerHTML =
+      '<span class="tab-dow">' + DOW[dateObj.getDay()] + '</span>' +
+      '<span class="tab-num">' + day + '</span>' +
+      '<span class="tab-mon">' + MONTH[m - 1] + '</span>' +
+      '<span class="tab-count">' + (count ? count + ' show' + (count > 1 ? 's' : '') : '—') + '</span>' +
+      (newCount ? '<span class="tab-new">' + newCount + ' new</span>' : '');
+    wrap.appendChild(btn);
+  });
+}
+
+function setDay(day, reRender = true) {
+  activeDay = day;
+  if (reRender) {
+    document.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.day === day));
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  renderCards();
+}
+
+function syncFilterChipsUI() {
+  const allSelected = selectedTheaters.size === ALL_THEATER_KEYS.length;
+  document.querySelectorAll('.theater-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.t === 'all' ? allSelected : selectedTheaters.has(c.dataset.t));
+  });
+}
+
+function toggleTheaterFilter(t) {
+  if (t === 'all') {
+    selectedTheaters = new Set(ALL_THEATER_KEYS);
+  } else if (selectedTheaters.has(t)) {
+    selectedTheaters.delete(t);
+  } else {
+    selectedTheaters.add(t);
+  }
+  saveSelectedTheaters();
+  syncFilterChipsUI();
+
+  // If the current day has nothing for the selected theatres, jump to the nearest day
+  // that does — otherwise picking a theatre can land on a misleadingly empty day
+  // (e.g. a theatre whose next screening is weeks out).
+  if (data) {
+    const hasOnActiveDay = (data.screenings || []).some(s => s.date === activeDay && selectedTheaters.has(s.theaterKey));
+    if (!hasOnActiveDay) {
+      const nextDay = (data.days || []).find(d =>
+        (data.screenings || []).some(s => s.date === d && selectedTheaters.has(s.theaterKey))
+      );
+      if (nextDay) activeDay = nextDay;
+    }
+  }
+
+  renderTabs();
+  renderCards();
+}
+
+function toggleLikedOnly() {
+  showLikedOnly = !showLikedOnly;
+  document.getElementById('liked-toggle').classList.toggle('active', showLikedOnly);
+  renderTabs();
+  renderCards();
+}
+
+function scrollTheaterCarousel(dir) {
+  const carousel = document.getElementById('theater-carousel');
+  if (!carousel) return;
+  carousel.scrollBy({ left: dir * 200, behavior: 'smooth' });
+  setTimeout(updateTheaterCarouselNav, 320);
+}
+
+function updateTheaterCarouselNav() {
+  const carousel = document.getElementById('theater-carousel');
+  if (!carousel) return;
+  const wrap = carousel.closest('.theater-carousel-wrap');
+  if (!wrap) return;
+  const btns = wrap.querySelectorAll('.pills-nav');
+  const atStart = carousel.scrollLeft <= 1;
+  const atEnd   = carousel.scrollLeft >= carousel.scrollWidth - carousel.clientWidth - 1;
+  if (btns[0]) btns[0].hidden = atStart;
+  if (btns[1]) btns[1].hidden = atEnd;
+}
+
+const HEART_ICON  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+const TICKET_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 1 0 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 1 0 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>';
+const X_ICON      = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+const UNDO_ICON   = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>';
+const CHEVRON_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+
+function makeActionBtns(title, date) {
+  const key  = normTitle(title);
+  const wrap = document.createElement('div');
+  wrap.className = 'card-actions';
+
+  const liked = likedFilms.has(key);
+  const heart = document.createElement('button');
+  heart.className = 'heart-btn' + (liked ? ' liked' : '');
+  heart.title = liked ? 'Remove interest' : "I'm interested";
+  heart.innerHTML = HEART_ICON;
+  heart.onclick = () => toggleHeart(key, heart);
+
+  const ticketDates = ticketedFilms.get(key);
+  const ticketedHere = !!(ticketDates && ticketDates.has(date));
+  const ticketedElsewhere = !!(ticketDates && ticketDates.size > 0 && !ticketedHere);
+  const ticket = document.createElement('button');
+  ticket.className = 'ticket-btn' + (ticketedHere ? ' ticketed-here' : ticketedElsewhere ? ' ticketed-elsewhere' : '');
+  ticket.title = 'Got tickets';
+  ticket.innerHTML = TICKET_ICON;
+  ticket.onclick = () => toggleTicket(key, date, ticket);
+
+  const xed = xFilms.has(key);
+  const x = document.createElement('button');
+  x.className = 'x-btn' + (xed ? ' xed' : '');
+  x.title = xed ? 'Undo' : 'Not interested';
+  x.innerHTML = xed ? UNDO_ICON : X_ICON;
+  x.onclick = () => toggleX(key, x);
+
+  wrap.appendChild(heart);
+  wrap.appendChild(ticket);
+  wrap.appendChild(x);
+  return wrap;
+}
+
+/* Shared image-probe helper — detects landscape/portrait and inserts into .card-image-slot.
+   Both orientations render in the same full-width 16:9 frame so cards stay visually
+   consistent; portrait posters are letterboxed (object-fit: contain) on a near-black bed. */
+function probeImage(card, imageUrl, title, date, showHeart = false) {
+  if (!imageUrl) { card.querySelector('.card-image-slot').remove(); return; }
+  const probe = new Image();
+  probe.onload = function() {
+    const slot = card.querySelector('.card-image-slot');
+    if (!slot) return;
+    const hasBodyContent = card.querySelector('.card-body').children.length > 0;
+    const isPortrait = this.naturalHeight > this.naturalWidth * 1.2;
+
+    const img = document.createElement('img');
+    img.className = 'card-img' + (isPortrait ? ' card-img--letterbox' : '');
+    img.src = imageUrl; img.alt = title; img.loading = 'lazy';
+    img.style.cssText = 'width:100%; margin:0;';
+
+    const wrap = document.createElement('div'); wrap.className = 'img-wrap';
+    wrap.style.cssText = 'position:relative; width:calc(100% + 44px); margin:0 -22px ' + (hasBodyContent ? '16px' : '0') + ';';
+
+    wrap.appendChild(img);
+    if (showHeart) wrap.appendChild(makeActionBtns(title, date));
+    card.querySelector('.card-body').insertBefore(wrap, card.querySelector('.card-body').firstChild);
+    slot.remove();
+  };
+  probe.onerror = function() { const s = card.querySelector('.card-image-slot'); if (s) s.remove(); };
+  probe.src = imageUrl;
+}
+
+function renderCards() {
+  const content = document.getElementById('content');
+  if (!data) {
+    content.innerHTML = '<div id="loading-overlay"><div class="loader-ring"></div></div>';
+    return;
+  }
+
+  if (weekView) { renderWeekView(); return; }
+
+  let raw = (data.screenings || []).filter(s => s.date === activeDay && selectedTheaters.has(s.theaterKey));
+  if (showLikedOnly) raw = raw.filter(s => likedFilms.has(normTitle(s.title)));
+
+  // Hide showtimes that have already passed today (future days are unaffected)
+  const now = new Date();
+  if (activeDay === toISODate(now)) {
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    raw = raw.filter(s => s.sortTime >= nowMinutes);
+  }
+
+  if (!raw.length) {
+    content.innerHTML =
+      '<div class="empty-state">' +
+        '<p class="empty-text">There are no current showings for this day/theatre(s).</p>' +
+        '<button class="empty-reset" onclick="resetFilters()">Reset filters</button>' +
+      '</div>';
+    return;
+  }
+
+  // ── Indie: group by title+date, merging across theatres on the same day ──
+  const indieGrouped = new Map();
+  raw.forEach(s => {
+    const key = normTitle(s.title) + '|' + s.date;
+    if (!indieGrouped.has(key)) {
+      indieGrouped.set(key, {
+        title: s.title, date: s.date,
+        image: s.image, description: s.description,
+        director: s.director, year: s.year, runtime: s.runtime,
+        country: s.country, language: s.language, quotes: s.quotes || [],
+        theaters: new Map(), minSort: Infinity,
+      });
+    }
+    const g = indieGrouped.get(key);
+    // Prefer the longer title (avoids keeping a truncated variant)
+    if (s.title.length > g.title.length) g.title = s.title;
+    ['image','description','director','year','runtime','country','language'].forEach(k => {
+      if (!g[k] && s[k]) g[k] = s[k];
+    });
+    if (s.isNew) {
+      if (!g.newTimes) g.newTimes = new Set();
+      g.newTimes.add(s.theaterKey + '|' + s.time);
+    }
+    const { theaterKey, theater, filmUrl, ticketUrl, time, sortTime } = s;
+    if (!g.theaters.has(theaterKey)) g.theaters.set(theaterKey, { theaterKey, theater, filmUrl, sessions: [] });
+    const t = g.theaters.get(theaterKey);
+    if (!t.sessions.some(x => x.time === time)) {
+      t.sessions.push({ time, sortTime, ticketUrl });
+      t.sessions.sort((a, b) => a.sortTime - b.sortTime);
+    }
+    if (sortTime < g.minSort) g.minSort = sortTime;
+  });
+
+  // ── Build all cards sorted by earliest time ─────────────────────
+  const allCards = [];
+
+  Array.from(indieGrouped.values())
+    .forEach(g => allCards.push({ k: g.minSort, title: g.title, date: g.date, card: buildIndieCard(g) }));
+  allCards.sort((a, b) => {
+    const ra = cardSortRank(a.title, a.date), rb = cardSortRank(b.title, b.date);
+    return ra !== rb ? ra - rb : a.k - b.k;
+  });
+
+  if (!allCards.length) {
+    content.innerHTML =
+      '<div class="empty-state">' +
+        '<p class="empty-text">There are no current showings for this day/theatre(s).</p>' +
+        '<button class="empty-reset" onclick="resetFilters()">Reset filters</button>' +
+      '</div>';
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'screenings';
+  allCards.forEach(c => grid.appendChild(c.card));
+
+  content.innerHTML = '';
+  content.appendChild(grid);
+
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.card-pills-carousel').forEach(carousel => {
+      updatePillsNav(carousel);
+      carousel.addEventListener('scroll', () => updatePillsNav(carousel), { passive: true });
+    });
+  });
+}
+
+/* Indie cinema card — handles single or multi-theatre same-day groupings */
+function buildIndieCard(g) {
+  const card = document.createElement('div');
+  const normT = normTitle(g.title);
+  const ticketDates = ticketedFilms.get(normT);
+  const ticketedHere = !!(ticketDates && ticketDates.has(g.date));
+  const ticketedElsewhere = !!(ticketDates && ticketDates.size > 0 && !ticketedHere);
+  let stateClass = '';
+  if (ticketedHere) stateClass = ' ticketed-card-here';
+  else if (ticketedElsewhere) stateClass = ' ticketed-card-elsewhere';
+  else if (likedFilms.has(normT)) stateClass = ' liked-card';
+  const isXed = xFilms.has(normT);
+  const isCollapsed = isXed && !expandedXFilms.has(normT);
+  card.className = 'card'
+    + stateClass
+    + (isXed ? ' x-marked' : '')
+    + (isCollapsed ? ' x-collapsed' : '');
+  card.dataset.film = g.title;
+
+  const metaHtml  = [g.director, g.year].filter(Boolean).map(esc).join('<span class="sep">·</span>');
+  const meta2Html = [g.runtime, g.country, g.language].filter(Boolean).map(esc).join('<span class="sep">·</span>');
+
+  // Theatres sorted by their earliest session
+  const theatersList = Array.from(g.theaters.values())
+    .sort((a, b) => a.sessions[0].sortTime - b.sessions[0].sortTime);
+  const isMulti = theatersList.length > 1;
+
+  // "Additional days" pills — other dates at any indie theatre
+  const otherDayMap = new Map();
+  (data.screenings || []).forEach(o => {
+    if (normTitle(o.title) === normTitle(g.title) && o.date !== g.date) {
+      const k = o.date + '|' + o.theaterKey + '|' + o.time;
+      if (!otherDayMap.has(k)) otherDayMap.set(k, o);
+    }
+  });
+  const alsoPlaying = Array.from(otherDayMap.values()).sort((a, b) =>
+    a.date.localeCompare(b.date) || a.sortTime - b.sortTime
+  );
+  const pillsHtml = alsoPlaying.length
+    ? '<div class="section-label" style="margin-top:16.5px">Additional days</div>' +
+      '<div class="pills-wrap"><button class="pills-nav" onclick="scrollPills(this,-1)">‹</button><div class="card-pills-carousel">' +
+        alsoPlaying.map(o => {
+          const href = o.ticketUrl || o.filmUrl;
+          return href
+            ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="also-pill">' + esc(pillLabel(o, g)) + '</a>'
+            : '<span class="also-pill">' + esc(pillLabel(o, g)) + '</span>';
+        }).join('') +
+      '</div><button class="pills-nav" onclick="scrollPills(this,1)">›</button></div>'
+    : '';
+
+  // Time-row: multi = times with (Theatre) labels + badges side by side; single = original layout
+  let timeRowHtml;
+  if (isMulti) {
+    // Flatten all sessions across theatres, sorted by time
+    const allSessions = [];
+    theatersList.forEach(t => t.sessions.forEach(sess =>
+      allSessions.push({ ...sess, theaterKey: t.theaterKey, theater: t.theater, filmUrl: t.filmUrl })
+    ));
+    allSessions.sort((a, b) => a.sortTime - b.sortTime);
+
+    const timesHtml = '<div class="card-times-multi">' +
+      allSessions.map(sess => {
+        const isNew = g.newTimes && g.newTimes.has(sess.theaterKey + '|' + sess.time);
+        const href = sess.ticketUrl || sess.filmUrl;
+        const newTag = isNew ? ' <span class="card-new-label">(New)</span>' : '';
+        const inner = esc(sess.time) + newTag + ' <span class="time-theater">(' + esc(THEATER_SHORT[sess.theaterKey] || sess.theater) + ')</span>';
+        return href
+          ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="card-time time-link">' + inner + '</a>'
+          : '<span class="card-time">' + inner + '</span>';
+      }).join('') + '</div>';
+
+    const seenKeys = new Set();
+    const badgesHtml = '<div class="card-badges-multi">' +
+      allSessions
+        .filter(sess => { if (seenKeys.has(sess.theaterKey)) return false; seenKeys.add(sess.theaterKey); return true; })
+        .map(sess => {
+          const label = esc(THEATER_SHORT[sess.theaterKey] || sess.theater);
+          return sess.filmUrl
+            ? '<a href="' + esc(sess.filmUrl) + '" target="_blank" rel="noopener" class="theater-badge ' + esc(sess.theaterKey) + '">' + label + ' ↗</a>'
+            : '<span class="theater-badge ' + esc(sess.theaterKey) + '">' + label + '</span>';
+        }).join('') + '</div>';
+
+    timeRowHtml = timesHtml + badgesHtml;
+  } else {
+    const t = theatersList[0];
+    const timesHtml = t.sessions.map(sess => {
+      const isNew = g.newTimes && g.newTimes.has(t.theaterKey + '|' + sess.time);
+      const href = sess.ticketUrl || t.filmUrl;
+      const newTag = isNew ? ' <span class="card-new-label">(New)</span>' : '';
+      return (href
+        ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="time-link">' + esc(sess.time) + '</a>'
+        : '<span>' + esc(sess.time) + '</span>') + newTag;
+    }).join('  ·  ');
+    const label = esc(THEATER_SHORT[t.theaterKey] || t.theater);
+    const badgeHtml = t.filmUrl
+      ? '<a href="' + esc(t.filmUrl) + '" target="_blank" rel="noopener" class="theater-badge ' + esc(t.theaterKey) + '">' + label + ' ↗</a>'
+      : '<span class="theater-badge ' + esc(t.theaterKey) + '">' + label + '</span>';
+    const onlyDay = alsoPlaying.length === 0 ? ' <span class="only-today-label">Only day</span>' : '';
+    timeRowHtml = '<div class="card-time">' + timesHtml + onlyDay + '</div>' + badgeHtml;
+  }
+
+  const descAndQuotes =
+    (g.description ? esc(g.description) : '') +
+    (g.quotes || []).slice(0, 4).map(q => '<blockquote class="card-quote">' + esc(q) + '</blockquote>').join('');
+  const bodyContent = descAndQuotes
+    ? '<div class="card-desc"><div class="card-desc-text">' + descAndQuotes + '</div></div>'
+    : '';
+
+  const chevronHtml = isXed
+    ? '<button type="button" class="x-chevron" title="' + (isCollapsed ? 'Expand' : 'Collapse') + '">' + CHEVRON_ICON + '</button>'
+    : '';
+
+  card.innerHTML =
+    '<div class="card-content">' +
+      '<div class="card-top"><div class="card-title-area">' +
+        '<div class="card-time-row">' + timeRowHtml + '</div>' +
+        '<div class="card-title-row"><div class="card-title">' + esc(g.title) + '</div>' + chevronHtml + '</div>' +
+        (metaHtml  ? '<div class="card-meta">'           + metaHtml  + '</div>' : '') +
+        (meta2Html ? '<div class="card-meta-secondary">' + meta2Html + '</div>' : '') +
+        pillsHtml +
+      '</div></div>' +
+      '<div class="card-image-slot"></div>' +
+      '<div class="card-body">' + bodyContent + '</div>' +
+    '</div>';
+
+  if (isXed) {
+    const chevronBtn = card.querySelector('.x-chevron');
+    chevronBtn.onclick = (e) => {
+      e.stopPropagation();
+      const collapsed = card.classList.toggle('x-collapsed');
+      if (collapsed) expandedXFilms.delete(normT); else expandedXFilms.add(normT);
+      chevronBtn.title = collapsed ? 'Expand' : 'Collapse';
+      // Truncation measurement no-ops while card-body is display:none, so re-run now that it's visible.
+      if (!collapsed) setupDescTruncation(card);
+    };
+  }
+
+  probeImage(card, g.image, g.title, g.date, true);
+  setupDescTruncation(card);
+  return card;
+}
+
+// Clamps the description to 3 lines and adds a Show more / Show less toggle
+// only when the text actually overflows that height.
+function setupDescTruncation(card) {
+  const textEl = card.querySelector('.card-desc-text');
+  if (!textEl || card.querySelector('.card-desc-toggle')) return;
+  requestAnimationFrame(() => {
+    // WebKit doesn't lay out clipped lines under -webkit-line-clamp, so
+    // scrollHeight === clientHeight even when text is visibly truncated.
+    // Briefly lift the clamp to measure the text's true full height instead.
+    const clampedHeight = textEl.clientHeight;
+    textEl.style.webkitLineClamp = 'unset';
+    textEl.style.display = 'block';
+    textEl.style.overflow = 'visible';
+    const fullHeight = textEl.scrollHeight;
+    textEl.style.webkitLineClamp = '';
+    textEl.style.display = '';
+    textEl.style.overflow = '';
+    if (fullHeight <= clampedHeight + 1) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'card-desc-toggle';
+    btn.textContent = 'Show more';
+    btn.onclick = () => {
+      const expanded = textEl.classList.toggle('expanded');
+      btn.textContent = expanded ? 'Show less' : 'Show more';
+    };
+    textEl.insertAdjacentElement('afterend', btn);
+  });
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Strip parenthetical qualifiers and truncation artifacts for fuzzy title matching
+function normTitle(title) {
+  return String(title)
+    .replace(/\s*\([^)]*\)/g, '')   // remove complete (30th Anniversary Restoration) etc.
+    .replace(/\s*\([^)]*$/, '')      // remove unclosed trailing ( ... truncated
+    .replace(/\s*[…\.]{2,}$/, '')   // remove trailing ellipsis
+    .trim()
+    .toLowerCase()
+    .replace(/\s*&\s*/g, ' and ');  // normalize & ↔ and
+}
+
+(function setupTheaterCarouselNav() {
+  const carousel = document.getElementById('theater-carousel');
+  if (!carousel) return;
+  updateTheaterCarouselNav();
+  carousel.addEventListener('scroll', updateTheaterCarouselNav, { passive: true });
+  window.addEventListener('resize', updateTheaterCarouselNav);
+})();
+
+if (window.__INIT_DATA__) {
+  data = window.__INIT_DATA__;
+  render();
+  pollForMoreScreenings();
+} else {
+  load('/api/screenings').then(() => pollForMoreScreenings());
+}
+
+// WKWebView silently drops target="_blank" links. Intercept them and hand
+// off to the OS default browser via the server's /api/open endpoint.
+document.addEventListener('click', function(e) {
+  const link = e.target.closest('a[target="_blank"]');
+  if (!link) return;
+  const url = link.getAttribute('href');
+  if (!url || url.startsWith('/') || url.startsWith('#')) return;
+  e.preventDefault();
+  fetch('/api/open?url=' + encodeURIComponent(url));
+});
+
+// Managed mode: heartbeat keeps server alive; beforeunload triggers shutdown
+navigator.sendBeacon('/api/ping');
+setInterval(() => navigator.sendBeacon('/api/ping'), 5000);
+window.addEventListener('beforeunload', () => navigator.sendBeacon('/api/shutdown'));
+</script>
+</body>
+</html>

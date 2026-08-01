@@ -1,0 +1,19 @@
+{
+  "name": "nyc-cinema-listings",
+  "version": "1.0.0",
+  "description": "NYC independent cinema listings for the next 7 days",
+  "private": true,
+  "scripts": {
+    "start": "node src/server.js",
+    "build-data": "node src/build-data.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0",
+    "express": "^4.19.0",
+    "puppeteer": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
