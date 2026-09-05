@@ -782,6 +782,17 @@ function toISODate(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
+// data.days is a fixed window baked in at scrape time on the publishing machine.
+// If a day or two goes by without a successful publish, its leading entries can
+// already be in the past for whoever's actually looking at the page — the viewer's
+// own clock, not the scrape time, is what decides that. Anything that lets someone
+// pick a date (day tabs, the mobile date panel, "jump to next day with a show")
+// should only ever offer days from today onward.
+function upcomingDays() {
+  const todayStr = toISODate(new Date());
+  return (data && data.days || []).filter(d => d >= todayStr);
+}
+
 function toggleWeekView() {
   weekView = !weekView;
   document.getElementById('week-btn').classList.toggle('active', weekView);
@@ -893,7 +904,10 @@ function renderWeekView() {
       date.setDate(monday.getDate() + w * 7 + d);
       const dateStr = toISODate(date);
 
-      if (!daySet.has(dateStr)) {
+      // Hide listings for days already past (viewer's local date), same as days
+      // outside the scraped window — a stale publish can otherwise leave old
+      // showtimes sitting in the grid.
+      if (!daySet.has(dateStr) || dateStr < todayStr) {
         html += '<div class="week-cell week-cell--empty"></div>';
         continue;
       }
@@ -1058,7 +1072,7 @@ function render() {
 
   document.querySelector('.sticky-nav').classList.add('visible');
   syncFilterChipsUI();
-  if (!activeDay || !data.days.includes(activeDay)) activeDay = data.days[0] || null;
+  if (!activeDay || !upcomingDays().includes(activeDay)) activeDay = upcomingDays()[0] || null;
   renderTabs();
   window.scrollTo({ top: 0, behavior: 'instant' });
   setDay(activeDay, false);
@@ -1079,7 +1093,7 @@ function preloadImages() {
 function renderTabs() {
   const wrap = document.getElementById('day-tabs');
   wrap.innerHTML = '';
-  (data.days || []).forEach((d, i) => {
+  upcomingDays().forEach((d, i) => {
     const [y, m, day] = d.split('-').map(Number);
     const dateObj = new Date(y, m - 1, day);
     const relevant = data.screenings.filter(s => s.date === d &&
@@ -1134,7 +1148,7 @@ function toggleTheaterFilter(t) {
   if (data) {
     const hasOnActiveDay = (data.screenings || []).some(s => s.date === activeDay && selectedTheaters.has(s.theaterKey));
     if (!hasOnActiveDay) {
-      const nextDay = (data.days || []).find(d =>
+      const nextDay = upcomingDays().find(d =>
         (data.screenings || []).some(s => s.date === d && selectedTheaters.has(s.theaterKey))
       );
       if (nextDay) activeDay = nextDay;
@@ -1184,7 +1198,7 @@ function renderMobileTheaterList() {
 function renderMobileDateList() {
   const wrap = document.getElementById('mobile-date-list');
   if (!wrap || !data) return;
-  wrap.innerHTML = (data.days || []).map(d => {
+  wrap.innerHTML = upcomingDays().map(d => {
     const [y, m, day] = d.split('-').map(Number);
     const dateObj = new Date(y, m - 1, day);
     const relevant = data.screenings.filter(s => s.date === d &&
