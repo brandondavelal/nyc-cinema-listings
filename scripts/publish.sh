@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-NODE_BIN="/Users/brandon/.nvm/versions/node/v24.15.0/bin/node"
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+NODE_BIN="$(command -v node)"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 STATE_DIR="$HOME/Library/Application Support/CinemaNY"
 STATE_FILE="$STATE_DIR/last-success"
