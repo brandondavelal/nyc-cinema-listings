@@ -390,7 +390,7 @@
       cursor: pointer; color: var(--text); padding: 0;
       transition: color 0.12s, background 0.12s, border-color 0.12s;
     }
-    .heart-btn:hover, .ticket-btn:hover, .x-btn:hover { color: var(--text); }
+    .heart-btn:hover, .ticket-btn:hover, .x-btn:hover { background: var(--card-hover); color: var(--text); }
     .heart-btn svg, .ticket-btn svg, .x-btn svg { fill: none; transition: fill 0.12s; }
     .heart-btn.liked { background: var(--text); color: #fff; }
     .heart-btn.liked svg { fill: currentColor; }
@@ -517,11 +517,11 @@
       letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px;
     }
     .only-today-label {
-      font-size: 0.7rem; font-weight: 700; color: #d97706;
+      font-size: 0.96rem; font-weight: 700; color: #d97706;
       letter-spacing: 0; vertical-align: middle;
     }
     a.also-pill { text-decoration: none; cursor: pointer; pointer-events: auto; }
-    a.also-pill:hover { border-color: var(--border); color: var(--text-muted); }
+    a.also-pill:hover { background: var(--card-hover); border-color: var(--border); color: var(--text-muted); }
 
     /* ── Empty / loading ──────────────────────────────────────────── */
     /* ── Toast notifications ─────────────────────────────────────── */

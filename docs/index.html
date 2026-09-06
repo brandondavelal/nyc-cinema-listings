@@ -13,7 +13,7 @@
       --surface:      #ffffff;
       --card:         #ffffff;
       --card-hover:   #faf9f8;
-      --border:       rgba(0,0,0,0.1);
+      --border:       rgba(0,0,0,0.07);
       --border-hover: rgba(0,0,0,0.22);
       --text:         #0a0a0a;
       --text-secondary: #2c2c2c;
@@ -69,24 +69,23 @@
     }
     .large-toggle:hover { color: var(--text); }
     .large-toggle.active { color: var(--text); }
+    #week-btn span { font-weight: 400; color: var(--text); }
     .toggle-track {
       position: relative; flex-shrink: 0;
-      width: 38px;
-      /* Fill the full height of the toggle wrapper = same as chip button */
-      align-self: stretch;
-      background: transparent; border: 1.5px solid currentColor;
+      width: 38px; height: 22px;
+      background: transparent; border: 1px solid var(--text);
       transition: background 0.15s;
     }
     .toggle-thumb {
       position: absolute;
-      /* Centered vertically, 2px from sides */
-      top: 50%; transform: translateY(-50%);
-      left: 3px;
-      width: 12px; height: 12px; background: currentColor;
+      /* 2px inset top/bottom; width follows from that so it stays square */
+      top: 2px; bottom: 2px; left: 2px;
+      aspect-ratio: 1 / 1; background: var(--text);
       transition: left 0.15s;
     }
+    .large-toggle:hover .toggle-track { background: var(--card-hover); }
     .large-toggle.active .toggle-track { background: var(--text); border-color: var(--text); }
-    .large-toggle.active .toggle-thumb { left: 21px; background: #fff; }
+    .large-toggle.active .toggle-thumb { left: auto; right: 2px; background: #fff; }
 
     .filters-top {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -102,7 +101,7 @@
     .mobile-filter-btn {
       display: flex; align-items: center; justify-content: space-between; gap: 6px;
       padding: 10px 14px;
-      background: var(--surface); border: 1.5px solid var(--border);
+      background: var(--surface); border: 1px solid var(--border);
       font-size: 0.82rem; font-weight: 600; color: var(--text);
       cursor: pointer;
     }
@@ -153,7 +152,7 @@
     /* Theater rows already show state via the checkbox — skip the fill */
     #mobile-theater-list .mobile-panel-row.selected { background: none; }
     .mobile-panel-row .mobile-row-check {
-      flex-shrink: 0; width: 18px; height: 18px; border: 1.5px solid var(--border);
+      flex-shrink: 0; width: 18px; height: 18px; border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center; color: transparent;
       font-size: 0.7rem;
     }
@@ -176,10 +175,10 @@
     .theater-carousel::-webkit-scrollbar { display: none; }
     .chip {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 5px 13px; 
-      border: 1.5px solid var(--border);
+      padding: 5px 13px;
+      border: 1px solid var(--border);
       background: transparent; color: var(--text-muted);
-      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.01em;
       cursor: pointer; transition: all 0.12s; white-space: nowrap;
     }
     /* "All Theaters" active = solid black */
@@ -187,47 +186,11 @@
     .chip.active[data-t="all"] { background: var(--text); color: #fff; border-color: var(--text); }
     .chip[data-t="all"]:hover  { background: var(--text); color: #fff; border-color: var(--text); }
 
-    /* Theater chips — outlined in theater color by default and when active */
-    .chip[data-t="metrograph"]          { color: var(--metrograph);  border-color: var(--metrograph); }
-    .chip[data-t="nitehawk-w"]          { color: var(--nitehawk-w);  border-color: var(--nitehawk-w); }
-    .chip[data-t="ifc"]                 { color: var(--ifc);         border-color: var(--ifc); }
-    .chip[data-t="roxy"]                { color: var(--roxy);        border-color: var(--roxy); }
-    .chip[data-t="lowcinema"]           { color: var(--lowcinema);   border-color: var(--lowcinema); }
-    .chip[data-t="quad"]                { color: var(--quad);        border-color: var(--quad); }
-    .chip[data-t="syndicated"]          { color: var(--syndicated);  border-color: var(--syndicated); }
-    .chip[data-t="paris"]               { color: var(--paris);       border-color: var(--paris); }
-    .chip[data-t="filmforum"]           { color: var(--filmforum);   border-color: var(--filmforum); }
-    .chip[data-t="anthology"]           { color: var(--anthology);   border-color: var(--anthology); }
-    .chip[data-t="japansociety"]           { color: var(--japansociety); border-color: var(--japansociety); }
-    .chip[data-t="momi"]           { color: var(--momi); border-color: var(--momi); }
-    .chip[data-t="bam"]           { color: var(--bam); border-color: var(--bam); }
-    .chip[data-t="spectacle"]           { color: var(--spectacle); border-color: var(--spectacle); }
-    .chip[data-t="lalliance"]           { color: var(--lalliance); border-color: var(--lalliance); }
-    .chip[data-t="angelika"]            { color: var(--angelika); border-color: var(--angelika); }
-    .chip[data-t="villageeast"]         { color: var(--villageeast); border-color: var(--villageeast); }
-    .chip[data-t="cinema123"]           { color: var(--cinema123); border-color: var(--cinema123); }
-    .chip.active[data-t="metrograph"]   { background: var(--metrograph);  color: #fff; border-color: var(--metrograph); }
-    .chip.active[data-t="nitehawk-w"]   { background: var(--nitehawk-w);  color: #fff; border-color: var(--nitehawk-w); }
-    .chip.active[data-t="ifc"]          { background: var(--ifc);         color: #fff; border-color: var(--ifc); }
-    .chip.active[data-t="roxy"]         { background: var(--roxy);        color: #fff; border-color: var(--roxy); }
-    .chip.active[data-t="lowcinema"]    { background: var(--lowcinema);   color: #fff; border-color: var(--lowcinema); }
-    .chip.active[data-t="quad"]         { background: var(--quad);        color: #fff; border-color: var(--quad); }
-    .chip.active[data-t="syndicated"]   { background: var(--syndicated);  color: #fff; border-color: var(--syndicated); }
-    .chip.active[data-t="paris"]        { background: var(--paris);       color: #fff; border-color: var(--paris); }
-    .chip.active[data-t="filmforum"]    { background: var(--filmforum);   color: #fff; border-color: var(--filmforum); }
-    .chip.active[data-t="anthology"]    { background: var(--anthology);   color: #fff; border-color: var(--anthology); }
-    .chip.active[data-t="japansociety"]    { background: var(--japansociety); color: #fff; border-color: var(--japansociety); }
-    .chip.active[data-t="momi"]    { background: var(--momi); color: #fff; border-color: var(--momi); }
-    .chip.active[data-t="bam"]    { background: var(--bam); color: #fff; border-color: var(--bam); }
-    .chip.active[data-t="spectacle"]    { background: var(--spectacle); color: #fff; border-color: var(--spectacle); }
-    .chip.active[data-t="lalliance"]    { background: var(--lalliance); color: #fff; border-color: var(--lalliance); }
-    .chip.active[data-t="angelika"]     { background: var(--angelika); color: #fff; border-color: var(--angelika); }
-    .chip.active[data-t="villageeast"]  { background: var(--villageeast); color: #fff; border-color: var(--villageeast); }
-    .chip.active[data-t="cinema123"]    { background: var(--cinema123); color: #fff; border-color: var(--cinema123); }
+    /* Theater chips — plain black & white, same treatment as "All Theaters" */
+    .chip.active.theater-chip { background: var(--text); color: #fff; border-color: var(--text); }
     /* Hover (unselected theater chips) = same outlined look as unchecked, plus an underline */
     .chip.theater-chip[data-t]:not([data-t="all"]):not(.active):hover {
       background: transparent;
-      text-decoration: underline;
     }
 
 
@@ -244,27 +207,28 @@
       transition: color 0.12s, background 0.12s;
     }
     .day-nav-btn:last-child { border-right: none; border-left: 1px solid var(--border); }
-    .day-nav-btn:hover { color: var(--text); background: #fff; box-shadow: inset 0 0 0 1.5px var(--text); }
+    .day-nav-btn:hover { color: var(--text); background: #f7f7f7; }
     .day-tabs-wrap {
-      flex: 1; padding: 0 12px; overflow-x: auto; scrollbar-width: none;
+      flex: 1; padding: 0; overflow-x: auto; scrollbar-width: none;
     }
     .day-tabs-wrap::-webkit-scrollbar { display: none; }
     .day-tabs { display: flex; min-width: max-content; }
     .day-tab {
       display: flex; flex-direction: column; align-items: center;
-      padding: 12px 20px 10px; background: transparent; border: none;
+      padding: 12px 40px 10px; background: transparent; border: none;
       border-bottom: 3px solid transparent; color: var(--text-dim);
       cursor: pointer; transition: color 0.12s, border-color 0.12s; gap: 1px;
-      width: 88px; flex-shrink: 0; height: auto; overflow: visible;
+      width: 128px; flex-shrink: 0; height: auto; overflow: visible;
     }
-    .day-tab:hover { color: var(--text); }
-    .day-tab.active { color: var(--text); border-bottom-color: var(--text); }
-    .day-tab .tab-dow   { font-size: 0.7rem;  font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-    .day-tab .tab-num   { font-size: 1.7rem;  font-weight: 800; line-height: 1; letter-spacing: -0.04em; }
-    .day-tab .tab-mon   { font-size: 0.68rem; font-weight: 600; color: inherit; opacity: 0.6; }
+    .day-tab:hover { color: var(--text); background: #f7f7f7; }
+    .day-tab.active { color: var(--text); border-bottom-color: var(--text); background: #f2f2f2; }
+    .day-tab .tab-dow   { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-right: -0.1em; }
+    .day-tab .tab-num   { font-size: 1.9rem;  font-weight: 800; line-height: 1; letter-spacing: -0.04em; margin-top: 2px; }
+    .day-tab .tab-mon   { font-size: 0.6rem; font-weight: 600; color: inherit; }
     .day-tab.active .tab-mon { opacity: 0.8; }
-    .day-tab .tab-count { font-size: 0.65rem; font-weight: 500; color: var(--text-dim); margin-top: 2px; white-space: nowrap; }
-    .day-tab .tab-new   { font-size: 0.65rem; font-weight: 600; color: #d97706; margin-top: 1px; }
+    .day-tab .tab-count-row { display: flex; align-items: baseline; gap: 4px; margin-top: 2px; }
+    .day-tab .tab-count { font-size: 0.58rem; font-weight: 500; color: var(--text-dim); white-space: nowrap; }
+    .day-tab .tab-new   { font-size: 0.58rem; font-weight: 500; color: #d97706; white-space: nowrap; }
 
     /* Multi-theatre time row */
     .card-times-multi {
@@ -282,17 +246,17 @@
     .card-badges-multi > .theater-badge { flex-shrink: 0; }
 
     /* ── Main ─────────────────────────────────────────────────────── */
-    .main { max-width: 645px; margin: 0 auto; padding: 14px 24px 80px; }
+    .main { max-width: 645px; margin: 0 auto; padding: 12px 24px 80px; }
     .main.week-mode  { max-width: none; padding: 0; }
 
     /* ── Week view ────────────────────────────────────────────────── */
-    .week-groups { display: flex; flex-direction: column; gap: 1px; background: rgba(0,0,0,0.1); }
+    .week-groups { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
     .week-group  { display: flex; flex-direction: column; }
     .week-header-row {
       display: grid; grid-template-columns: repeat(7, 1fr);
-      gap: 1px; background: rgba(0,0,0,0.1); background-clip: content-box;
+      gap: 1px; background: var(--border); background-clip: content-box;
       position: sticky; top: var(--nav-h, 65px); z-index: 10;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
+      border-bottom: 1px solid var(--border);
     }
     .week-header {
       background: var(--surface); padding: 7px 8px 5px;
@@ -311,7 +275,7 @@
     .week-header--today .week-header-num { color: var(--text); }
     .week-content-row {
       display: grid; grid-template-columns: repeat(7, 1fr);
-      gap: 1px; background: rgba(0,0,0,0.1);
+      gap: 1px; background: var(--border);
     }
     .week-cell {
       background: var(--bg); padding: 10px 8px; min-height: 72px;
@@ -333,8 +297,8 @@
     a.week-film-title { color: inherit; text-decoration: none; }
     a.week-film-title:hover { text-decoration: underline; text-underline-offset: 2px; }
     .week-film-times { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
-    .week-time { font-size: 0.62rem; font-weight: 600; color: var(--text-muted); }
-    .week-theater { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; align-self: center; }
+    .week-time { font-size: 0.62rem; font-weight: 400; color: var(--text-muted); }
+    .week-theater { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; align-self: center; color: var(--text); flex-basis: 100%; }
     .week-no-films { font-size: 0.65rem; color: var(--text-dim); }
 
     .error-notice {
@@ -349,7 +313,7 @@
 
     .card {
       background: var(--card);
-      border: 1px solid rgba(0,0,0,0.07);
+      border: 1px solid var(--border);
       overflow: hidden;
     }
 
@@ -361,13 +325,11 @@
     /* Theater link(s) stacked above the showtimes list */
     .card-time-row {
       display: flex; flex-direction: column; align-items: flex-start;
-      gap: 4px; margin-top: 8px;
+      gap: 2px; margin-top: 4px;
     }
-    .card-time-row > .theater-badge,
-    .card-time-row > .badge-pills-wrap { order: -1; }
     .card-time-row .pills-wrap { margin-top: 0; }
     .card-time {
-      font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
+      font-size: 0.75rem; font-weight: 400; color: var(--text-muted);
       letter-spacing: 0; line-height: 1.45; flex-shrink: 0;
       max-width: 100%; overflow-x: auto; overflow-y: hidden;
       white-space: nowrap; scrollbar-width: none;
@@ -377,12 +339,12 @@
 
     .card-title-area { flex: 1; min-width: 0; }
     .card-title {
-      font-size: 2.3rem; font-weight: 800; color: var(--text);
-      line-height: 1.05; letter-spacing: -0.04em; margin-top: 9px; margin-bottom: 6px;
+      font-size: 1.5rem; font-weight: 800; color: var(--text);
+      line-height: 1.05; letter-spacing: -0.04em; margin-top: 0; margin-bottom: 0;
     }
     .card-meta-secondary {
       font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
-      margin-bottom: 10px; line-height: 1.45;
+      margin-bottom: 4px; line-height: 1.45;
     }
     .card-meta-secondary .sep { margin: 0 6px; color: var(--text-dim); }
 
@@ -392,6 +354,7 @@
       width: 100%;
       margin-top: 10px;
     }
+    .card-body > .pills-wrap { margin-top: 8px; }
     .card-pills-carousel {
       display: flex; gap: 6px;
       overflow-x: auto; scrollbar-width: none; padding-bottom: 1px;
@@ -420,7 +383,7 @@
     .pills-nav[hidden] { visibility: hidden; pointer-events: none; display: flex !important; }
     .also-pill {
       flex-shrink: 0; padding: 3px 10px;
-      border: 1.5px solid var(--border);
+      border: 1px solid var(--border);
       background: transparent;
       font-size: 0.68rem; font-weight: 600; color: var(--text-muted);
       white-space: nowrap; line-height: 1.5; letter-spacing: 0.01em;
@@ -430,6 +393,7 @@
 
     /* ── Body ─────────────────────────────────────────────────────── */
     .card-body { margin-top: 18px; }
+    .card.no-media .card-body { margin-top: 9px; }
 
     .img-wrap { position: relative; }
     .card-actions {
@@ -443,7 +407,7 @@
       cursor: pointer; color: var(--text); padding: 0;
       transition: color 0.12s, background 0.12s, border-color 0.12s;
     }
-    .heart-btn:hover, .ticket-btn:hover, .x-btn:hover { color: var(--text); }
+    .heart-btn:hover, .ticket-btn:hover, .x-btn:hover { background: var(--card-hover); color: var(--text); }
     .heart-btn svg, .ticket-btn svg, .x-btn svg { fill: none; transition: fill 0.12s; }
     .heart-btn.liked { background: var(--text); color: #fff; }
     .heart-btn.liked svg { fill: currentColor; }
@@ -452,17 +416,24 @@
     .ticket-btn.ticketed-elsewhere { background: var(--ticket-orange); color: #fff; border: 2px solid var(--ticket-orange); }
     .ticket-btn.ticketed-elsewhere svg { fill: currentColor; }
 
-    .card.liked-card { outline: 2px solid var(--text); }
-    .card.ticketed-card-here { outline: 2px solid var(--ticket-green); }
-    .card.ticketed-card-elsewhere { outline: 2px solid var(--ticket-orange); }
-    .card.x-marked { opacity: 0.5; }
+    .card.liked-card { outline: 1px solid var(--text); outline-offset: -1px; }
+    .card.ticketed-card-here { outline: 1px solid var(--ticket-green); outline-offset: -1px; }
+    .card.ticketed-card-elsewhere { outline: 1px solid var(--ticket-orange); outline-offset: -1px; }
+    /* Dim everything but the title itself — nested opacity can't cancel a
+       parent's, so fade each other section individually instead of the
+       whole card. */
+    .card.x-marked .card-time-row,
+    .card.x-marked .card-body,
+    .card.x-marked .x-chevron {
+      opacity: 0.5;
+    }
 
     .card-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .x-chevron {
-      background: none; border: none; cursor: pointer; padding: 4px; margin-top: 9px;
-      color: var(--text-dim); flex-shrink: 0; display: flex; align-items: center;
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: var(--text); flex-shrink: 0; display: flex; align-items: center;
     }
-    .x-chevron:hover { color: var(--text); }
+    .x-chevron:hover { color: var(--text-dim); }
     .x-chevron svg { transition: transform 0.2s; }
     .card.x-collapsed .x-chevron svg { transform: rotate(-90deg); }
     .card.x-collapsed .card-time-row,
@@ -479,11 +450,21 @@
       width: calc(100% + 44px); margin: 0 -22px 16px;
       aspect-ratio: 16 / 9; object-fit: cover; object-position: center;
     }
-    .card-img--letterbox { background: #0a0a0a; object-fit: contain; }
+    .card-img--letterbox { position: relative; z-index: 2; background: transparent; object-fit: contain; }
+    .img-wrap--letterbox { overflow: hidden; }
+    .card-img-bg {
+      position: absolute; inset: 0; z-index: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center;
+      filter: blur(28px) brightness(0.55);
+      transform: scale(1.15); /* hide soft blurred edge from clipped view */
+    }
+    .card-img-scrim { position: absolute; inset: 0; z-index: 1; background: rgba(0,0,0,0.25); }
 
     .card-desc {
-      font-size: 0.92rem; font-weight: 400;
-      color: var(--text-secondary); line-height: 1.7;
+      position: relative;
+      font-size: 0.78rem; font-weight: 400;
+      color: var(--text-secondary); line-height: 20.1px;
     }
     .card-desc-text {
       display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
@@ -492,12 +473,28 @@
     .card-desc-text.expanded {
       display: block; -webkit-line-clamp: unset; overflow: visible;
     }
+    /* Flows right after the truncated text (same line, same text node's
+       parent) rather than overlaying it, so it never covers part of a word. */
     .card-desc-toggle {
-      display: inline-block; margin-top: 4px;
-      background: none; border: none; padding: 0;
-      font: inherit; font-size: 0.88rem; font-weight: 600;
-      color: var(--text); text-decoration: underline;
+      display: inline-block;
+      background: none; border: none; padding: 0 0 0 4px;
+      font: inherit; font-size: 0.78rem; font-weight: 600;
+      color: var(--text); text-decoration: none;
       cursor: pointer;
+    }
+    .card-desc-toggle:hover { text-decoration: underline; }
+    .card-desc-text.expanded .card-desc-toggle {
+      display: block; margin-top: 4px; padding-left: 0;
+    }
+    /* Fallback for the rare quote-only body (no leading text to measure) —
+       keeps the old overlay-on-last-line behavior. */
+    .card-desc-toggle--overlay {
+      background: var(--card);
+      position: absolute; right: 0; bottom: 0;
+    }
+    .card-desc-text.expanded ~ .card-desc-toggle--overlay {
+      position: static; display: block; margin-top: 4px; padding-left: 0;
+      background: none;
     }
 
     .card-quote {
@@ -512,7 +509,7 @@
     /* Theater badge — plain text, bold black */
     .theater-badge {
       display: inline-flex; align-items: center;
-      font-size: 0.82rem; font-weight: 700; color: var(--text);
+      font-size: 0.75rem; font-weight: 400; color: var(--text);
       line-height: 1.45;
       background: transparent; border: none;
       text-decoration: none;
@@ -528,15 +525,15 @@
     }
 
     .section-label {
-      font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px;
+      font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
+      margin-bottom: 2px;
     }
     .only-today-label {
-      font-size: 0.7rem; font-weight: 700; color: #d97706;
+      font-size: 0.75rem; font-weight: 700; color: #d97706;
       letter-spacing: 0; vertical-align: middle;
     }
     a.also-pill { text-decoration: none; cursor: pointer; pointer-events: auto; }
-    a.also-pill:hover { border-color: var(--border); color: var(--text-muted); }
+    a.also-pill:hover { background: var(--card-hover); border-color: var(--border); color: var(--text-muted); }
 
     /* ── Empty / loading ──────────────────────────────────────────── */
     /* ── Toast notifications ─────────────────────────────────────── */
@@ -626,7 +623,7 @@
       <div class="toggle-track"><div class="toggle-thumb"></div></div>
     </div>
     <div class="large-toggle" id="week-btn" onclick="toggleWeekView()">
-      <span>Calendar view</span>
+      <span>Calendar</span>
       <div class="toggle-track"><div class="toggle-thumb"></div></div>
     </div>
   </div>
@@ -836,7 +833,6 @@ function buildWeekFilmEntry(g) {
     if (!byTheatre.has(sess.theaterKey)) byTheatre.set(sess.theaterKey, []);
     byTheatre.get(sess.theaterKey).push(sess);
   });
-  const dot = '<span style="color:var(--text-dim);font-size:0.5rem;align-self:center"> · </span>';
   const timesHtml = '<div class="week-film-times">' +
     Array.from(byTheatre.entries()).map(([tk, sessions]) => {
       const timeSpans = sessions.map(sess => {
@@ -845,9 +841,9 @@ function buildWeekFilmEntry(g) {
           ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="week-time time-link">' + esc(sess.time) + '</a>'
           : '<span class="week-time">' + esc(sess.time) + '</span>';
       }).join(' ');
-      const label = ' <span class="week-theater" style="color:var(--' + esc(tk) + ')">' + esc(THEATER_SHORT[tk] || tk) + '</span>';
-      return timeSpans + label;
-    }).join(dot) +
+      const label = '<span class="week-theater">' + esc(THEATER_SHORT[tk] || tk) + '</span>';
+      return label + timeSpans;
+    }).join('') +
   '</div>';
   const titleHtml = g.filmUrl
     ? '<a href="' + esc(g.filmUrl) + '" target="_blank" rel="noopener" class="week-film-title">' + esc(g.title) + '</a>'
@@ -1108,8 +1104,10 @@ function renderTabs() {
       '<span class="tab-dow">' + DOW[dateObj.getDay()] + '</span>' +
       '<span class="tab-num">' + day + '</span>' +
       '<span class="tab-mon">' + MONTH[m - 1] + '</span>' +
-      '<span class="tab-count">' + (count ? count + ' show' + (count > 1 ? 's' : '') : '—') + '</span>' +
-      (newCount ? '<span class="tab-new">' + newCount + ' new</span>' : '');
+      '<span class="tab-count-row">' +
+        '<span class="tab-count">' + (count ? count + ' show' + (count > 1 ? 's' : '') : '—') + '</span>' +
+        (newCount ? '<span class="tab-new">(New)</span>' : '') +
+      '</span>';
     wrap.appendChild(btn);
   });
 }
@@ -1302,7 +1300,7 @@ function makeActionBtns(title, date) {
    Both orientations render in the same full-width 16:9 frame so cards stay visually
    consistent; portrait posters are letterboxed (object-fit: contain) on a near-black bed. */
 function probeImage(card, imageUrl, title, date, showHeart = false) {
-  if (!imageUrl) { card.querySelector('.card-image-slot').remove(); return; }
+  if (!imageUrl) { card.querySelector('.card-image-slot').remove(); card.classList.add('no-media'); return; }
   const probe = new Image();
   probe.onload = function() {
     const slot = card.querySelector('.card-image-slot');
@@ -1315,15 +1313,27 @@ function probeImage(card, imageUrl, title, date, showHeart = false) {
     img.src = imageUrl; img.alt = title; img.loading = 'lazy';
     img.style.cssText = 'width:100%; margin:0;';
 
-    const wrap = document.createElement('div'); wrap.className = 'img-wrap';
+    const wrap = document.createElement('div'); wrap.className = 'img-wrap' + (isPortrait ? ' img-wrap--letterbox' : '');
     wrap.style.cssText = 'position:relative; width:calc(100% + 44px); margin:0 -22px ' + (hasBodyContent ? '16px' : '0') + ';';
 
+    if (isPortrait) {
+      // Fill the letterboxed bars with a blurred, scrimmed copy of the same
+      // artwork instead of flat black.
+      const bg = document.createElement('img');
+      bg.className = 'card-img-bg';
+      bg.src = imageUrl; bg.alt = ''; bg.loading = 'lazy';
+      bg.setAttribute('aria-hidden', 'true');
+      wrap.appendChild(bg);
+      const scrim = document.createElement('div');
+      scrim.className = 'card-img-scrim';
+      wrap.appendChild(scrim);
+    }
     wrap.appendChild(img);
     if (showHeart) wrap.appendChild(makeActionBtns(title, date));
     card.querySelector('.card-body').insertBefore(wrap, card.querySelector('.card-body').firstChild);
     slot.remove();
   };
-  probe.onerror = function() { const s = card.querySelector('.card-image-slot'); if (s) s.remove(); };
+  probe.onerror = function() { const s = card.querySelector('.card-image-slot'); if (s) s.remove(); card.classList.add('no-media'); };
   probe.src = imageUrl;
 }
 
@@ -1584,12 +1594,69 @@ function setupDescTruncation(card) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'card-desc-toggle';
-    btn.textContent = 'Show more';
-    btn.onclick = () => {
-      const expanded = textEl.classList.toggle('expanded');
-      btn.textContent = expanded ? 'Show less' : 'Show more';
-    };
-    textEl.insertAdjacentElement('afterend', btn);
+    btn.textContent = '…show more';
+
+    // The description text is a leading text node, optionally followed by
+    // quote blockquotes (see descAndQuotes above). When that's the shape,
+    // binary-search the text node down to the longest whole-word prefix
+    // that — together with the toggle button sitting right after it inline —
+    // still fits the clamped height. The button is measured as part of the
+    // content instead of overlaid on top of it afterward, so it never covers
+    // part of a word.
+    const firstNode = textEl.firstChild;
+    if (firstNode && firstNode.nodeType === Node.TEXT_NODE) {
+      const fullText = firstNode.textContent;
+      const quoteEls = Array.from(textEl.children);
+      quoteEls.forEach(el => { el.style.display = 'none'; });
+      textEl.insertBefore(btn, firstNode.nextSibling);
+      textEl.style.webkitLineClamp = 'unset';
+      textEl.style.display = 'block';
+      textEl.style.overflow = 'visible';
+
+      const words = fullText.split(' ');
+      let lo = 0, hi = words.length, best = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        firstNode.textContent = words.slice(0, mid).join(' ');
+        if (textEl.scrollHeight <= clampedHeight + 1) { best = mid; lo = mid + 1; }
+        else hi = mid - 1;
+      }
+      const truncated = words.slice(0, best).join(' ');
+      firstNode.textContent = truncated;
+
+      // The truncated content now fits the clamped height exactly, so the
+      // collapsed state no longer needs -webkit-line-clamp at all.
+      textEl.style.webkitLineClamp = '';
+      textEl.style.overflow = 'hidden';
+
+      btn.onclick = () => {
+        const expanded = textEl.classList.toggle('expanded');
+        if (expanded) {
+          firstNode.textContent = fullText;
+          quoteEls.forEach(el => { el.style.display = ''; });
+          textEl.style.display = '';
+          textEl.style.overflow = '';
+          textEl.appendChild(btn); // move after the quotes, block, at the end
+          btn.textContent = 'show less';
+        } else {
+          firstNode.textContent = truncated;
+          quoteEls.forEach(el => { el.style.display = 'none'; });
+          textEl.style.display = 'block';
+          textEl.style.overflow = 'hidden';
+          textEl.insertBefore(btn, firstNode.nextSibling); // back inline
+          btn.textContent = '…show more';
+        }
+      };
+    } else {
+      // No leading text (rare: quote-only body) — fall back to the plain
+      // line-clamp cutoff with an overlaid toggle.
+      btn.classList.add('card-desc-toggle--overlay');
+      btn.onclick = () => {
+        const expanded = textEl.classList.toggle('expanded');
+        btn.textContent = expanded ? 'show less' : '…show more';
+      };
+      textEl.insertAdjacentElement('afterend', btn);
+    }
   });
 }
 
