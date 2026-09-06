@@ -237,7 +237,7 @@
     }
     .card-times-multi::-webkit-scrollbar { display: none; }
     .card-times-multi > .card-time { flex-shrink: 0; }
-    .time-theater { font-size: 0.78em; font-weight: 400; color: var(--text-muted); }
+    .time-theater { font-size: 1em; font-weight: 400; color: var(--text-muted); }
     .card-badges-multi {
       display: flex; gap: 12px; align-items: flex-start; width: 100%;
       flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
@@ -325,7 +325,7 @@
     /* Theater link(s) stacked above the showtimes list */
     .card-time-row {
       display: flex; flex-direction: column; align-items: flex-start;
-      gap: 2px; margin-top: 4px;
+      gap: 4px; margin-top: 4px;
     }
     .card-time-row .pills-wrap { margin-top: 0; }
     .card-time {
@@ -336,11 +336,12 @@
     }
     .card-time::-webkit-scrollbar { display: none; }
     .time-value { font-weight: 700; }
+    .time-sep { margin: 0 6px; color: var(--text-dim); }
 
     .card-title-area { flex: 1; min-width: 0; }
     .card-title {
       font-size: 1.5rem; font-weight: 800; color: var(--text);
-      line-height: 1.05; letter-spacing: -0.04em; margin-top: 0; margin-bottom: 0;
+      line-height: 1.05; letter-spacing: -0.04em; margin-top: 0; margin-bottom: 4px;
     }
     .card-meta-secondary {
       font-size: 0.82rem; font-weight: 400; color: var(--text-muted);
@@ -739,7 +740,7 @@ function scrollDays(dir) {
 }
 
 function scrollPills(btn, dir) {
-  const carousel = btn.parentElement.querySelector('.card-pills-carousel, .card-times-multi, .card-badges-multi');
+  const carousel = btn.parentElement.querySelector('.card-pills-carousel, .card-times-multi, .card-badges-multi, .card-time');
   if (!carousel) return;
   carousel.scrollBy({ left: dir * 180, behavior: 'smooth' });
   setTimeout(() => updatePillsNav(carousel), 320);
@@ -1425,7 +1426,7 @@ function renderCards() {
   content.appendChild(grid);
 
   requestAnimationFrame(() => {
-    grid.querySelectorAll('.card-pills-carousel, .card-times-multi, .card-badges-multi').forEach(carousel => {
+    grid.querySelectorAll('.card-pills-carousel, .card-times-multi, .card-badges-multi, .card-time-row > .pills-wrap > .card-time').forEach(carousel => {
       updatePillsNav(carousel);
       carousel.addEventListener('scroll', () => updatePillsNav(carousel), { passive: true });
     });
@@ -1523,13 +1524,13 @@ function buildIndieCard(g) {
       return (href
         ? '<a href="' + esc(href) + '" target="_blank" rel="noopener" class="time-link time-value">' + esc(sess.time) + '</a>'
         : '<span class="time-value">' + esc(sess.time) + '</span>') + newTag;
-    }).join('  ·  ');
+    }).join('<span class="time-sep">·</span>');
     const label = esc(THEATER_SHORT[t.theaterKey] || t.theater);
     const badgeHtml = t.filmUrl
       ? '<a href="' + esc(t.filmUrl) + '" target="_blank" rel="noopener" class="theater-badge ' + esc(t.theaterKey) + '">' + label + ' ↗</a>'
       : '<span class="theater-badge ' + esc(t.theaterKey) + '">' + label + '</span>';
     const onlyDay = alsoPlaying.length === 0 ? ' <span class="only-today-label">Only day</span>' : '';
-    timeRowHtml = '<div class="card-time">' + timesHtml + onlyDay + '</div>' + badgeHtml;
+    timeRowHtml = '<div class="pills-wrap"><button class="pills-nav" onclick="scrollPills(this,-1)">‹</button><div class="card-time">' + timesHtml + onlyDay + '</div><button class="pills-nav" onclick="scrollPills(this,1)">›</button></div>' + badgeHtml;
   }
 
   const descAndQuotes =
