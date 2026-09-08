@@ -228,7 +228,8 @@
     .day-tab.active .tab-mon { opacity: 0.8; }
     .day-tab .tab-count-row { display: flex; align-items: baseline; gap: 4px; margin-top: 2px; }
     .day-tab .tab-count { font-size: 0.58rem; font-weight: 500; color: var(--text-dim); white-space: nowrap; }
-    .day-tab .tab-new   { font-size: 0.58rem; font-weight: 500; color: #d97706; white-space: nowrap; }
+    /* Temporarily hidden — the seen-once behavior isn't working well yet. */
+    .day-tab .tab-new   { display: none; font-size: 0.58rem; font-weight: 500; color: #d97706; white-space: nowrap; }
 
     /* Multi-theatre time row */
     .card-times-multi {
@@ -312,10 +313,23 @@
     .screenings { display: flex; flex-direction: column; gap: 16px; }
 
     .card {
+      position: relative;
       background: var(--card);
       border: 1px solid var(--border);
       overflow: hidden;
     }
+    /* No poster/still to anchor the action buttons to — pin them to the card
+       itself instead, at the same inset as the title, and give the title row
+       room so it doesn't run underneath them. */
+    .card.no-media .card-actions {
+      position: absolute; top: 20px; right: 22px;
+    }
+    .card.no-media .card-actions .heart-btn,
+    .card.no-media .card-actions .ticket-btn,
+    .card.no-media .card-actions .x-btn {
+      border: 1px solid var(--border);
+    }
+    .card.no-media .card-title-row { padding-right: 150px; }
 
     .card-content { padding: 20px 22px; }
 
@@ -519,7 +533,9 @@
     .time-link { color: inherit; text-decoration: none; }
     .card-time.time-link { color: var(--text-muted); }
     .time-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+    /* Temporarily hidden — the seen-once behavior isn't working well yet. */
     .card-new-label {
+      display: none;
       font-size: 0.7rem; font-weight: 700; color: #d97706;
       letter-spacing: 0; vertical-align: middle;
     }
@@ -1336,7 +1352,12 @@ function makeActionBtns(title, date) {
    Both orientations render in the same full-width 16:9 frame so cards stay visually
    consistent; portrait posters are letterboxed (object-fit: contain) on a near-black bed. */
 function probeImage(card, imageUrl, title, date, showHeart = false) {
-  if (!imageUrl) { card.querySelector('.card-image-slot').remove(); card.classList.add('no-media'); return; }
+  if (!imageUrl) {
+    card.querySelector('.card-image-slot').remove();
+    card.classList.add('no-media');
+    if (showHeart) card.querySelector('.card-content').appendChild(makeActionBtns(title, date));
+    return;
+  }
   const probe = new Image();
   probe.onload = function() {
     const slot = card.querySelector('.card-image-slot');
@@ -1369,7 +1390,12 @@ function probeImage(card, imageUrl, title, date, showHeart = false) {
     card.querySelector('.card-body').insertBefore(wrap, card.querySelector('.card-body').firstChild);
     slot.remove();
   };
-  probe.onerror = function() { const s = card.querySelector('.card-image-slot'); if (s) s.remove(); card.classList.add('no-media'); };
+  probe.onerror = function() {
+    const s = card.querySelector('.card-image-slot');
+    if (s) s.remove();
+    card.classList.add('no-media');
+    if (showHeart) card.querySelector('.card-content').appendChild(makeActionBtns(title, date));
+  };
   probe.src = imageUrl;
 }
 
