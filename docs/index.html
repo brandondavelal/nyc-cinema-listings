@@ -1154,7 +1154,8 @@ function syncFilterChipsUI() {
 
 function toggleTheaterFilter(t) {
   if (t === 'all') {
-    selectedTheaters = new Set(ALL_THEATER_KEYS);
+    const allSelected = selectedTheaters.size === ALL_THEATER_KEYS.length;
+    selectedTheaters = allSelected ? new Set() : new Set(ALL_THEATER_KEYS);
   } else if (selectedTheaters.has(t)) {
     selectedTheaters.delete(t);
   } else {
