@@ -985,6 +985,28 @@ function saveTicketed() {
   localStorage.setItem('ticketed-films', JSON.stringify(obj));
 }
 
+// The "New" badge should only ever show a given screening to a viewer once —
+// after that first sighting on this device, it's no longer news to them, even
+// if the server keeps flagging it new for everyone else. Keyed on the exact
+// screening (film + theater + date + time) so a genuinely different new
+// showtime for the same film still gets its own "New" moment.
+const seenNew = new Set(JSON.parse(localStorage.getItem('seen-new') || '[]'));
+function seenNewKey(s) { return normTitle(s.title) + '|' + s.theaterKey + '|' + s.date + '|' + s.time; }
+function suppressSeenNew(d) {
+  if (!d || !Array.isArray(d.screenings)) return;
+  const freshlySeen = [];
+  d.screenings.forEach(s => {
+    if (!s.isNew) return;
+    const key = seenNewKey(s);
+    if (seenNew.has(key)) { s.isNew = false; }
+    else { freshlySeen.push(key); }
+  });
+  if (freshlySeen.length) {
+    freshlySeen.forEach(k => seenNew.add(k));
+    localStorage.setItem('seen-new', JSON.stringify([...seenNew]));
+  }
+}
+
 // Sort priority for the screenings list: films ticketed *for this date* go first,
 // then liked, then everything else in its normal time order, with X'd-out films
 // pushed to the very bottom. A film ticketed for a different date keeps its normal spot.
@@ -1044,6 +1066,7 @@ async function load(endpoint = './data.json?t=' + Date.now(), spinner = false) {
     const res = await fetch(endpoint);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     data = await res.json();
+    suppressSeenNew(data);
     render();
   } catch (e) {
     showToast('Could not load listings.');
