@@ -790,6 +790,18 @@ function upcomingDays() {
   return (data && data.days || []).filter(d => d >= todayStr);
 }
 
+// After 9:45 PM Eastern (showtimes for the night are effectively over), default
+// straight to tomorrow instead of landing on a mostly-past "today". This only
+// changes which day is pre-selected — today stays fully browsable in the tabs.
+function defaultDay() {
+  const days = upcomingDays();
+  if (!days.length) return null;
+  const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const isLateET = nowET.getHours() > 21 || (nowET.getHours() === 21 && nowET.getMinutes() >= 45);
+  if (!isLateET) return days[0];
+  return days.find(d => d > days[0]) || days[0];
+}
+
 function toggleWeekView() {
   weekView = !weekView;
   document.getElementById('week-btn').classList.toggle('active', weekView);
@@ -1091,7 +1103,7 @@ function render() {
 
   document.querySelector('.sticky-nav').classList.add('visible');
   syncFilterChipsUI();
-  if (!activeDay || !upcomingDays().includes(activeDay)) activeDay = upcomingDays()[0] || null;
+  if (!activeDay || !upcomingDays().includes(activeDay)) activeDay = defaultDay();
   renderTabs();
   window.scrollTo({ top: 0, behavior: 'instant' });
   setDay(activeDay, false);
