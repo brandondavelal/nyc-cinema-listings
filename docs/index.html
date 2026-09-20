@@ -552,27 +552,50 @@
     a.also-pill:hover { background: var(--card-hover); border-color: var(--border); color: var(--text-muted); }
 
     /* ── Empty / loading ──────────────────────────────────────────── */
-    /* ── Toast notifications ─────────────────────────────────────── */
-    .toast-container {
-      position: fixed; bottom: 24px; left: 24px; z-index: 600;
-      display: flex; flex-direction: column; gap: 8px; max-width: 380px;
+
+    /* ── Status info button + modal (desktop only) ───────────────── */
+    .info-btn {
+      position: fixed; bottom: 24px; right: 24px; z-index: 500;
+      width: 36px; height: 36px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #fff; color: var(--text-muted);
+      border: 1px solid var(--border); cursor: pointer;
+      transition: color 0.12s, background 0.12s;
     }
-    .toast {
-      display: flex; align-items: flex-start; gap: 10px;
-      background: #1a1a1a; color: #fff;
-      padding: 10px 10px 10px 14px;
-      font-size: 0.78rem; font-weight: 500; line-height: 1.5;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.22);
-      animation: toast-in 0.18s ease;
+    .info-btn:hover { color: var(--text); background: var(--card-hover); }
+    .info-btn.has-issues::after {
+      content: ''; position: absolute; top: -3px; right: -3px;
+      width: 8px; height: 8px; border-radius: 50%; background: #d97706;
     }
-    @keyframes toast-in { from { opacity: 0; transform: translateY(6px); } }
-    .toast-msg { flex: 1; }
-    .toast-close {
-      flex-shrink: 0; background: none; border: none;
-      color: rgba(255,255,255,0.45); cursor: pointer; font-size: 1.1rem;
-      line-height: 1; padding: 0 2px; transition: color 0.12s;
+    .status-backdrop {
+      position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,0.4);
+      display: none; align-items: center; justify-content: center; padding: 24px;
     }
-    .toast-close:hover { color: #fff; }
+    .status-backdrop.open { display: flex; }
+    .status-modal {
+      background: #fff; border: 1px solid var(--border);
+      width: 100%; max-width: 480px; max-height: 80vh;
+      display: flex; flex-direction: column;
+    }
+    .status-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      font-size: 0.95rem; font-weight: 800; letter-spacing: -0.02em;
+    }
+    .status-close {
+      background: none; border: none; cursor: pointer; padding: 0 2px;
+      font-size: 1.4rem; line-height: 1; color: var(--text-muted);
+    }
+    .status-close:hover { color: var(--text); }
+    .status-body { overflow-y: auto; padding: 4px 20px 12px; }
+    .status-empty { padding: 20px 0; font-size: 0.82rem; color: var(--text-muted); }
+    .status-item { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; line-height: 1.45; }
+    .status-item:last-child { border-bottom: none; }
+    .status-item-top { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; }
+    .status-item-time { font-weight: 400; color: var(--text-dim); white-space: nowrap; }
+    .status-item-msg { color: var(--text-muted); }
+    .status-item-note { color: var(--text-dim); margin-top: 2px; }
+    @media (max-width: 560px) { .info-btn, .status-backdrop { display: none !important; } }
 
     /* ── Empty state ──────────────────────────────────────────────── */
     .empty-state {
@@ -708,7 +731,16 @@
   <div class="mobile-panel-body" id="mobile-date-list"></div>
 </div>
 
-<div class="toast-container" id="toast-container"></div>
+
+<button class="info-btn" id="info-btn" title="Listing status" aria-label="Listing status" onclick="openStatus()">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+</button>
+<div class="status-backdrop" id="status-backdrop" onclick="if (event.target === this) closeStatus()">
+  <div class="status-modal" role="dialog" aria-label="Listing status">
+    <div class="status-head"><span>Issues in the last 3 days</span><button class="status-close" onclick="closeStatus()" aria-label="Close">&times;</button></div>
+    <div class="status-body" id="status-body"></div>
+  </div>
+</div>
 
 <div class="main">
   <div id="content">
@@ -970,20 +1002,6 @@ function showLoading() {
     '<div id="loading-overlay"><div class="loader-ring"></div></div>';
 }
 
-function showToast(msg) {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML =
-    '<span class="toast-msg">' + esc(msg) + '</span>' +
-    '<button class="toast-close" onclick="this.closest(\'.toast\').remove()">×</button>';
-  container.appendChild(toast);
-}
-
-function clearToasts() {
-  document.getElementById('toast-container').innerHTML = '';
-}
-
 function resetFilters() {
   selectedTheaters = new Set(ALL_THEATER_KEYS);
   showLikedOnly = false;
@@ -1097,7 +1115,6 @@ async function load(endpoint = './data.json?t=' + Date.now(), spinner = false) {
     suppressSeenNew(data);
     render();
   } catch (e) {
-    showToast('Could not load listings.');
     // Keep existing content visible if we already have data; only show error state on first load
     if (!data) {
       document.getElementById('content').innerHTML =
@@ -1108,15 +1125,36 @@ async function load(endpoint = './data.json?t=' + Date.now(), spinner = false) {
   }
 }
 
+/* ── Listing status modal ────────────────────────────────────────── */
+const STATUS_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+function recentIssues() {
+  const cutoff = Date.now() - STATUS_WINDOW_MS;
+  return ((data && data.issues) || []).filter(i => Date.parse(i.at) >= cutoff)
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+function updateInfoBtn() {
+  const btn = document.getElementById('info-btn');
+  if (btn) btn.classList.toggle('has-issues', recentIssues().length > 0);
+}
+function openStatus() {
+  const items = recentIssues();
+  const fmt = iso => new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  document.getElementById('status-body').innerHTML = items.length
+    ? items.map(i =>
+        '<div class="status-item">' +
+          '<div class="status-item-top"><span>' + esc(i.theater) + '</span><span class="status-item-time">' + esc(fmt(i.at)) + '</span></div>' +
+          '<div class="status-item-msg">' + esc(i.message) + '</div>' +
+          (i.keptListings ? '<div class="status-item-note">Showing the last successful listings until the next update.</div>' : '') +
+        '</div>').join('')
+    : '<div class="status-empty">No issues in the last 3 days.</div>';
+  document.getElementById('status-backdrop').classList.add('open');
+}
+function closeStatus() { document.getElementById('status-backdrop').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeStatus(); });
+
 /* ── Render ──────────────────────────────────────────────────────── */
 function render() {
-  clearToasts();
-  if (data.errors) {
-    Object.entries(data.errors).forEach(([theater, msg]) => {
-      showToast('Could not load ' + theater + ': ' + msg);
-    });
-  }
-
+  updateInfoBtn();
   document.querySelector('.sticky-nav').classList.add('visible');
   syncFilterChipsUI();
   if (!activeDay || !upcomingDays().includes(activeDay)) activeDay = defaultDay();

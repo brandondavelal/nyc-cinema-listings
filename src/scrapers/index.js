@@ -25,24 +25,24 @@ const { enrichScreenings } = require('../film-details');
 const { getNextSevenDays } = require('../utils/dates');
 
 const SCRAPERS = [
-  { fn: scrapeMetrograph,             name: 'Metrograph' },
-  { fn: scrapeNitehawkWilliamsburg,   name: 'Nitehawk Williamsburg' },
-  { fn: scrapeIFC,                    name: 'IFC Center' },
-  { fn: scrapeRoxy,                   name: 'Roxy Cinema' },
-  { fn: scrapeLowCinema,              name: 'Low Cinema' },
-  { fn: scrapeQuad,                   name: 'Quad Cinema' },
-  { fn: scrapeSyndicated,             name: 'Syndicated' },
-  { fn: scrapeParis,                  name: 'Paris Theater' },
-  { fn: scrapeFilmForum,              name: 'Film Forum' },
-  { fn: scrapeAnthology,              name: 'Anthology Film Archives' },
-  { fn: scrapeJapanSociety,           name: 'Japan Society' },
-  { fn: scrapeMoMI,                   name: 'Museum of the Moving Image' },
-  { fn: scrapeBAM,                    name: 'BAM' },
-  { fn: scrapeSpectacle,              name: 'Spectacle Theater' },
-  { fn: scrapeLAlliance,              name: "L'Alliance New York" },
-  { fn: scrapeAngelikaNYC,            name: 'Angelika Film Center' },
-  { fn: scrapeVillageEast,            name: 'Village East by Angelika' },
-  { fn: scrapeCinema123,              name: 'Cinema 123 by Angelika' },
+  { fn: scrapeMetrograph,             name: 'Metrograph', key: 'metrograph' },
+  { fn: scrapeNitehawkWilliamsburg,   name: 'Nitehawk Williamsburg', key: 'nitehawk-w' },
+  { fn: scrapeIFC,                    name: 'IFC Center', key: 'ifc' },
+  { fn: scrapeRoxy,                   name: 'Roxy Cinema', key: 'roxy' },
+  { fn: scrapeLowCinema,              name: 'Low Cinema', key: 'lowcinema' },
+  { fn: scrapeQuad,                   name: 'Quad Cinema', key: 'quad' },
+  { fn: scrapeSyndicated,             name: 'Syndicated', key: 'syndicated' },
+  { fn: scrapeParis,                  name: 'Paris Theater', key: 'paris' },
+  { fn: scrapeFilmForum,              name: 'Film Forum', key: 'filmforum' },
+  { fn: scrapeAnthology,              name: 'Anthology Film Archives', key: 'anthology' },
+  { fn: scrapeJapanSociety,           name: 'Japan Society', key: 'japansociety' },
+  { fn: scrapeMoMI,                   name: 'Museum of the Moving Image', key: 'momi' },
+  { fn: scrapeBAM,                    name: 'BAM', key: 'bam' },
+  { fn: scrapeSpectacle,              name: 'Spectacle Theater', key: 'spectacle' },
+  { fn: scrapeLAlliance,              name: "L'Alliance New York", key: 'lalliance' },
+  { fn: scrapeAngelikaNYC,            name: 'Angelika Film Center', key: 'angelika' },
+  { fn: scrapeVillageEast,            name: 'Village East by Angelika', key: 'villageeast' },
+  { fn: scrapeCinema123,              name: 'Cinema 123 by Angelika', key: 'cinema123' },
 ];
 
 const CACHE_TTL  = 30 * 60 * 1000;
@@ -180,4 +180,4 @@ async function refreshScreenings() {
   return getAllScreenings({ forceRefresh: true });
 }
 
-module.exports = { getAllScreenings, refreshScreenings };
+module.exports = { getAllScreenings, refreshScreenings, SCRAPERS };

@@ -26,7 +26,8 @@ fi
 
 echo "[$(date)] Starting publish run"
 
-"$NODE_BIN" src/build-data.js
+# Hold the Mac awake for the scrape so a sleep mid-run can't time out requests.
+/usr/bin/caffeinate -i "$NODE_BIN" src/build-data.js
 
 git add docs/data.json
 
