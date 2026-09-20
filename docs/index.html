@@ -558,15 +558,10 @@
       position: fixed; bottom: 24px; right: 24px; z-index: 500;
       width: 36px; height: 36px; padding: 0;
       display: flex; align-items: center; justify-content: center;
-      background: #fff; color: var(--text-muted);
-      border: 1px solid var(--border); cursor: pointer;
-      transition: color 0.12s, background 0.12s;
+      background: none; border: none; color: rgba(0,0,0,0.16); cursor: pointer;
+      transition: color 0.12s;
     }
-    .info-btn:hover { color: var(--text); background: var(--card-hover); }
-    .info-btn.has-issues::after {
-      content: ''; position: absolute; top: -3px; right: -3px;
-      width: 8px; height: 8px; border-radius: 50%; background: #d97706;
-    }
+    .info-btn:hover { color: rgba(0,0,0,0.4); }
     .status-backdrop {
       position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,0.4);
       display: none; align-items: center; justify-content: center; padding: 24px;
@@ -1132,10 +1127,6 @@ function recentIssues() {
   return ((data && data.issues) || []).filter(i => Date.parse(i.at) >= cutoff)
     .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }
-function updateInfoBtn() {
-  const btn = document.getElementById('info-btn');
-  if (btn) btn.classList.toggle('has-issues', recentIssues().length > 0);
-}
 function openStatus() {
   const items = recentIssues();
   const fmt = iso => new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -1154,7 +1145,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeStatus(
 
 /* ── Render ──────────────────────────────────────────────────────── */
 function render() {
-  updateInfoBtn();
   document.querySelector('.sticky-nav').classList.add('visible');
   syncFilterChipsUI();
   if (!activeDay || !upcomingDays().includes(activeDay)) activeDay = defaultDay();
