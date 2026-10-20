@@ -37,10 +37,11 @@ module.exports = async function scrapeMetrograph() {
 
     dayDiv.find('.item.film-thumbnail').each((_, itemEl) => {
       const item = $(itemEl);
-      const titleLink = item.find('h4 a[href*="vista_film_id"]').first();
+      const titleLink = item.find('h4 a').first();
       const title = titleLink.text().trim();
       if (!title) return;
-      const filmUrl = titleLink.attr('href') ? BASE + titleLink.attr('href') : null;
+      const href    = titleLink.attr('href');
+      const filmUrl = href ? new URL(href, BASE).href : null;
       const image   = item.find('a.image img').first().attr('src') || null;
       const meta    = parseMetadata(item.find('.film-metadata').first().text().trim());
 
