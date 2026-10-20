@@ -13,6 +13,7 @@ const scrapeQuad                                         = require('./quad');
 const scrapeSyndicated                                   = require('./syndicated');
 const scrapeParis                                        = require('./paris');
 const scrapeFilmForum                                    = require('./filmforum');
+const scrapeFilmLinc                                     = require('./filmlinc');
 const scrapeAnthology                                    = require('./anthology');
 const scrapeJapanSociety                                 = require('./japansociety');
 const scrapeMoMI                                         = require('./momi');
@@ -34,6 +35,7 @@ const SCRAPERS = [
   { fn: scrapeSyndicated,             name: 'Syndicated', key: 'syndicated' },
   { fn: scrapeParis,                  name: 'Paris Theater', key: 'paris' },
   { fn: scrapeFilmForum,              name: 'Film Forum', key: 'filmforum' },
+  { fn: scrapeFilmLinc,               name: 'Film at Lincoln Center', key: 'filmlinc' },
   { fn: scrapeAnthology,              name: 'Anthology Film Archives', key: 'anthology' },
   { fn: scrapeJapanSociety,           name: 'Japan Society', key: 'japansociety' },
   { fn: scrapeMoMI,                   name: 'Museum of the Moving Image', key: 'momi' },

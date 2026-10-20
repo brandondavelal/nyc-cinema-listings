@@ -681,6 +681,7 @@
         <button class="chip theater-chip"        data-t="bam"           onclick="toggleTheaterFilter('bam')">BAM</button>
         <button class="chip theater-chip"        data-t="ifc"           onclick="toggleTheaterFilter('ifc')">IFC</button>
         <button class="chip theater-chip"        data-t="filmforum"     onclick="toggleTheaterFilter('filmforum')">Film Forum</button>
+        <button class="chip theater-chip"        data-t="filmlinc"      onclick="toggleTheaterFilter('filmlinc')">Lincoln Center</button>
         <button class="chip theater-chip"        data-t="paris"         onclick="toggleTheaterFilter('paris')">Paris</button>
         <button class="chip theater-chip"        data-t="momi"          onclick="toggleTheaterFilter('momi')">MoMI</button>
         <button class="chip theater-chip"        data-t="japansociety"  onclick="toggleTheaterFilter('japansociety')">Japan Society</button>
@@ -753,15 +754,24 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 const DOW   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const THEATER_SHORT = { metrograph: 'Metrograph', bam: 'BAM', ifc: 'IFC Center', filmforum: 'Film Forum', paris: 'Paris Theater', momi: 'MoMI', japansociety: 'Japan Society', angelika: 'Angelika', villageeast: 'Village East', cinema123: 'Cinema 123', 'nitehawk-w': 'Nitehawk Wmsbg', roxy: 'Roxy', lowcinema: 'Low Cinema', quad: 'Quad', syndicated: 'Syndicated', anthology: 'Anthology', spectacle: 'Spectacle', lalliance: "L'Alliance" };
+const THEATER_SHORT = { metrograph: 'Metrograph', bam: 'BAM', ifc: 'IFC Center', filmforum: 'Film Forum', filmlinc: 'Lincoln Center', paris: 'Paris Theater', momi: 'MoMI', japansociety: 'Japan Society', angelika: 'Angelika', villageeast: 'Village East', cinema123: 'Cinema 123', 'nitehawk-w': 'Nitehawk Wmsbg', roxy: 'Roxy', lowcinema: 'Low Cinema', quad: 'Quad', syndicated: 'Syndicated', anthology: 'Anthology', spectacle: 'Spectacle', lalliance: "L'Alliance" };
 const ALL_THEATER_KEYS = Object.keys(THEATER_SHORT);
 
+// Theaters added after a visitor saved their selection default to on, so a
+// new venue doesn't stay hidden behind an old saved filter.
+const THEATERS_ADDED_LATER = ['filmlinc'];
 function loadSelectedTheaters() {
   try {
     const saved = JSON.parse(localStorage.getItem('selected-theaters') || 'null');
+    let known = JSON.parse(localStorage.getItem('known-theaters') || 'null');
+    if (!Array.isArray(known)) known = ALL_THEATER_KEYS.filter(k => !THEATERS_ADDED_LATER.includes(k));
+    localStorage.setItem('known-theaters', JSON.stringify(ALL_THEATER_KEYS));
     if (Array.isArray(saved) && saved.length) {
-      const valid = saved.filter(k => ALL_THEATER_KEYS.includes(k));
-      if (valid.length) return new Set(valid);
+      const valid = new Set(saved.filter(k => ALL_THEATER_KEYS.includes(k)));
+      if (valid.size) {
+        ALL_THEATER_KEYS.forEach(k => { if (!known.includes(k)) valid.add(k); });
+        return valid;
+      }
     }
   } catch (e) {}
   return new Set(ALL_THEATER_KEYS);
