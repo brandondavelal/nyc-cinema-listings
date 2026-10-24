@@ -592,6 +592,40 @@
     .status-item-note { color: var(--text-dim); margin-top: 2px; }
     @media (max-width: 560px) { .info-btn, .status-backdrop { display: none !important; } }
 
+    /* ── Search overlay (desktop only, opened with the S key) ─────── */
+    .search-overlay {
+      position: fixed; inset: 0; z-index: 650; background: var(--bg);
+      display: none; flex-direction: column;
+    }
+    .search-overlay.open { display: flex; }
+    .search-top { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--bg); }
+    .search-bar {
+      max-width: 645px; margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; gap: 12px; color: var(--text-dim);
+    }
+    .search-input {
+      flex: 1; min-width: 0; border: none; outline: none; background: none;
+      font: inherit; font-size: 1.1rem; font-weight: 600; color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .search-input::placeholder { color: var(--text-dim); font-weight: 500; }
+    .search-esc {
+      flex-shrink: 0; border: 1px solid var(--border); background: none; cursor: pointer;
+      padding: 3px 8px; font: inherit; font-size: 0.68rem; font-weight: 600; color: var(--text-dim);
+    }
+    .search-esc:hover { color: var(--text); background: var(--card-hover); }
+    .search-scroll { flex: 1; overflow-y: auto; }
+    .search-results { max-width: 645px; margin: 0 auto; padding: 16px 24px 80px; }
+    .search-note { font-size: 0.82rem; color: var(--text-muted); padding: 24px 0; }
+    .search-note--tail { padding: 4px 0 0; }
+    .search-day {
+      font-size: 0.82rem; font-weight: 600; color: var(--text-muted);
+      margin: 0 0 6px;
+    }
+    .search-item + .search-item { margin-top: 20px; }
+    body.search-locked { overflow: hidden; }
+    @media (max-width: 560px) { .search-overlay { display: none !important; } }
+
     /* ── Empty state ──────────────────────────────────────────────── */
     .empty-state {
       display: flex; flex-direction: column; align-items: center;
@@ -736,6 +770,17 @@
     <div class="status-head"><span>Issues in the last 3 days</span><button class="status-close" onclick="closeStatus()" aria-label="Close">&times;</button></div>
     <div class="status-body" id="status-body"></div>
   </div>
+</div>
+
+<div class="search-overlay" id="search-overlay">
+  <div class="search-top">
+    <div class="search-bar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="search-input" id="search-input" type="text" placeholder="Search titles or directors" autocomplete="off" spellcheck="false" aria-label="Search titles or directors" oninput="onSearchInput()">
+      <button class="search-esc" onclick="closeSearch()">esc</button>
+    </div>
+  </div>
+  <div class="search-scroll" id="search-scroll"><div class="search-results" id="search-results"></div></div>
 </div>
 
 <div class="main">
@@ -1153,6 +1198,134 @@ function openStatus() {
 function closeStatus() { document.getElementById('status-backdrop').classList.remove('open'); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeStatus(); });
 
+/* ── Search (desktop, S key) ─────────────────────────────────────── */
+// Searches every upcoming day at once, across all theaters. Films are ranked by
+// how well the words match (exact title → title prefix → title phrase → all
+// words in title → director), then listed soonest to latest.
+let searchOpen = false;
+let searchTimer = null;
+const SEARCH_LIMIT = 40;
+
+function searchNorm(str) {
+  return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/['’`]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+// Lower is better; null means no match. Every query word must hit the title or director.
+function searchRank(phrase, words, title, director) {
+  const t = searchNorm(title), d = searchNorm(director);
+  const wordHit = (text, w) => (' ' + text).includes(' ' + w);
+  if (t === phrase) return 0;
+  if (t.startsWith(phrase)) return 1;
+  if ((' ' + t).includes(' ' + phrase)) return 2;
+  if (words.every(w => wordHit(t, w))) return 3;
+  if (words.every(w => t.includes(w))) return 4;
+  if (words.every(w => d.includes(w))) return 5;
+  if (words.every(w => t.includes(w) || d.includes(w))) return 6;
+  return null;
+}
+
+function searchDayLabel(dateStr) {
+  const today = toISODate(new Date());
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const pretty = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  if (dateStr === today) return 'Today · ' + pretty;
+  if (dateStr === toISODate(tomorrow)) return 'Tomorrow · ' + pretty;
+  return pretty;
+}
+
+function openSearch() {
+  if (searchOpen || !data) return;
+  searchOpen = true;
+  document.getElementById('search-overlay').classList.add('open');
+  document.body.classList.add('search-locked');
+  const input = document.getElementById('search-input');
+  input.focus(); input.select();
+  refreshSearch();
+}
+
+function closeSearch() {
+  if (!searchOpen) return;
+  searchOpen = false;
+  document.getElementById('search-overlay').classList.remove('open');
+  document.body.classList.remove('search-locked');
+  renderCards(); // heart/ticket/X changes made in search should show in the day view
+}
+
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(refreshSearch, 120);
+}
+
+function refreshSearch() {
+  const box = document.getElementById('search-results');
+  const scroller = document.getElementById('search-scroll');
+  const query = document.getElementById('search-input').value;
+  const phrase = searchNorm(query);
+  const keepScroll = scroller.scrollTop;
+  if (!phrase) {
+    box.innerHTML = '<div class="search-note">Search film titles or directors across every upcoming day.</div>';
+    return;
+  }
+  const words = phrase.split(' ');
+
+  const days = new Set(upcomingDays());
+  const now = new Date();
+  const today = toISODate(now);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const raw = (data.screenings || []).filter(s =>
+    days.has(s.date) && !(s.date === today && s.sortTime < nowMinutes));
+
+  const ranked = [];
+  groupByFilmDay(raw).forEach(g => {
+    const rank = searchRank(phrase, words, g.title, g.director);
+    if (rank !== null) ranked.push({ g, rank });
+  });
+  ranked.sort((a, b) => a.rank - b.rank || a.g.date.localeCompare(b.g.date) || a.g.minSort - b.g.minSort);
+
+  if (!ranked.length) {
+    box.innerHTML = '<div class="search-note">No films match “' + esc(query.trim()) + '”.</div>';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  ranked.slice(0, SEARCH_LIMIT).forEach(({ g }) => {
+    const item = document.createElement('div');
+    item.className = 'search-item';
+    item.innerHTML = '<div class="search-day">' + esc(searchDayLabel(g.date)) + '</div>';
+    item.appendChild(buildIndieCard(g));
+    frag.appendChild(item);
+  });
+  if (ranked.length > SEARCH_LIMIT) {
+    const note = document.createElement('div');
+    note.className = 'search-note search-note--tail';
+    note.textContent = 'Showing the first ' + SEARCH_LIMIT + ' of ' + ranked.length + ' — keep typing to narrow it down.';
+    frag.appendChild(note);
+  }
+  box.innerHTML = '';
+  box.appendChild(frag);
+  scroller.scrollTop = keepScroll;
+
+  requestAnimationFrame(() => {
+    box.querySelectorAll('.card-pills-carousel, .card-times-multi, .card-badges-multi, .card-time-row > .pills-wrap > .card-time').forEach(carousel => {
+      updatePillsNav(carousel);
+      carousel.addEventListener('scroll', () => updatePillsNav(carousel), { passive: true });
+    });
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeSearch(); return; }
+  if (e.key.toLowerCase() !== 's' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const el = e.target;
+  if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+  if (window.innerWidth <= 560) return; // desktop only
+  if (document.getElementById('status-backdrop').classList.contains('open')) return;
+  e.preventDefault();
+  openSearch();
+});
+
 /* ── Render ──────────────────────────────────────────────────────── */
 function render() {
   document.querySelector('.sticky-nav').classList.add('visible');
@@ -1437,35 +1610,8 @@ function probeImage(card, imageUrl, title, date, showHeart = false) {
   probe.src = imageUrl;
 }
 
-function renderCards() {
-  const content = document.getElementById('content');
-  if (!data) {
-    content.innerHTML = '<div id="loading-overlay"><div class="loader-ring"></div></div>';
-    return;
-  }
-
-  if (weekView) { renderWeekView(); return; }
-
-  let raw = (data.screenings || []).filter(s => s.date === activeDay && selectedTheaters.has(s.theaterKey));
-  if (showLikedOnly) raw = raw.filter(s => likedFilms.has(normTitle(s.title)));
-
-  // Hide showtimes that have already passed today (future days are unaffected)
-  const now = new Date();
-  if (activeDay === toISODate(now)) {
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    raw = raw.filter(s => s.sortTime >= nowMinutes);
-  }
-
-  if (!raw.length) {
-    content.innerHTML =
-      '<div class="empty-state">' +
-        '<p class="empty-text">There are no current showings for this day/theatre(s).</p>' +
-        '<button class="empty-reset" onclick="resetFilters()">Reset filters</button>' +
-      '</div>';
-    return;
-  }
-
-  // ── Indie: group by title+date, merging across theatres on the same day ──
+// Group screenings by title+date, merging across theatres on the same day.
+function groupByFilmDay(raw) {
   const indieGrouped = new Map();
   raw.forEach(s => {
     const key = normTitle(s.title) + '|' + s.date;
@@ -1497,11 +1643,44 @@ function renderCards() {
     }
     if (sortTime < g.minSort) g.minSort = sortTime;
   });
+  return Array.from(indieGrouped.values());
+}
+
+function renderCards() {
+  if (searchOpen) { refreshSearch(); return; }
+  const content = document.getElementById('content');
+  if (!data) {
+    content.innerHTML = '<div id="loading-overlay"><div class="loader-ring"></div></div>';
+    return;
+  }
+
+  if (weekView) { renderWeekView(); return; }
+
+  let raw = (data.screenings || []).filter(s => s.date === activeDay && selectedTheaters.has(s.theaterKey));
+  if (showLikedOnly) raw = raw.filter(s => likedFilms.has(normTitle(s.title)));
+
+  // Hide showtimes that have already passed today (future days are unaffected)
+  const now = new Date();
+  if (activeDay === toISODate(now)) {
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    raw = raw.filter(s => s.sortTime >= nowMinutes);
+  }
+
+  if (!raw.length) {
+    content.innerHTML =
+      '<div class="empty-state">' +
+        '<p class="empty-text">There are no current showings for this day/theatre(s).</p>' +
+        '<button class="empty-reset" onclick="resetFilters()">Reset filters</button>' +
+      '</div>';
+    return;
+  }
+
+  const groups = groupByFilmDay(raw);
 
   // ── Build all cards sorted by earliest time ─────────────────────
   const allCards = [];
 
-  Array.from(indieGrouped.values())
+  groups
     .forEach(g => allCards.push({ k: g.minSort, title: g.title, date: g.date, card: buildIndieCard(g) }));
   allCards.sort((a, b) => {
     const ra = cardSortRank(a.title, a.date), rb = cardSortRank(b.title, b.date);
